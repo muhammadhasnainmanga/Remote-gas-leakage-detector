@@ -2,16 +2,24 @@ const $ = (id) => document.getElementById(id);
 let chart = null;
 let currentPeriod = 'daily';
 let currentView = 'leakage';
+
 const rangeDescriptions = {
   daily: 'Last 24 hours · average of readings in each 5-minute interval',
   weekly: 'Last 7 days · hourly averages',
   monthly: 'Last 30 days · daily averages',
 };
+
 const numberFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 const dateFormat = new Intl.DateTimeFormat(undefined, { timeZone: 'Asia/Karachi', dateStyle: 'medium', timeStyle: 'short' });
+
 function formatNumber(value) { return value === null || value === undefined ? '—' : numberFormat.format(value); }
+
 function formatDate(value) { if (!value) return '—'; const date = new Date(value); return Number.isNaN(date.getTime()) ? '—' : dateFormat.format(date); }
+
 function setConnection(kind, text) { $('connectionDot').className = `connection-dot ${kind}`; $('connectionText').textContent = text; }
+
+
+// function to render chart
 function renderChart(points, period) {
   $('chartEmpty').hidden = points.length !== 0;
   if (!window.Chart) {
@@ -51,6 +59,9 @@ function renderChart(points, period) {
     chart.update();
   }
 }
+
+
+
 function renderData(data) {
   const sensor = data.mq2;
   const hit = sensor.last_threshold_hit;
@@ -90,6 +101,8 @@ function renderData(data) {
   }
   renderChart(sensor.points, data.period);
 }
+
+//getting all the last data, values, and all type of true and false
 async function fetchRecentData() {
   const button = $('refreshButton');
   button.disabled = true;
@@ -110,6 +123,8 @@ async function fetchRecentData() {
     button.textContent = 'Get recent data';
   }
 }
+
+
 function showView(view) {
   currentView = view;
   $('leakagePage').hidden = view !== 'leakage';
@@ -120,7 +135,10 @@ function showView(view) {
     button.setAttribute('aria-pressed', String(active));
   });
 }
+
+
 document.querySelectorAll('.nav-button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
+
 document.querySelectorAll('.range-button').forEach((button) => button.addEventListener('click', () => {
   currentPeriod = button.dataset.period;
   document.querySelectorAll('.range-button').forEach((other) => {

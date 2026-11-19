@@ -1,58 +1,213 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f6f7">
-  <title>MQ-2 monitor</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../static/css/dashboard.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-  <script defer src="/static/js/dashboard.js"></script>
-</head>
-<body>
-  <div class="app-shell">
-    <header class="topbar">
-      <a class="brand" href="/">Gas monitor</a>
-      <nav class="section-nav" aria-label="Monitor section">
-        <button class="nav-button active" data-view="leakage" aria-pressed="true">Leakage</button>
-        <button class="nav-button" data-view="weight" aria-pressed="false">Weight</button>
-      </nav>
-      <div class="header-actions"><span class="connection-dot" id="connectionDot"></span><span id="connectionText">Not loaded</span><button id="refreshButton" class="refresh-button">Get recent data</button></div>
-    </header>
-    <main>
-      <div id="errorBanner" class="error-banner" hidden role="alert"></div>
-      <section id="leakagePage" class="page-view">
-        <section class="page-heading"><div><p class="eyebrow">MQ-2 SENSOR</p><h1>Gas leakage readings</h1><p class="subheading">Raw sensor values recorded in Neon</p></div><div class="updated-box"><span class="updated-label">DATA FETCHED</span><strong id="updatedAt">Not loaded yet</strong></div></section>
-        <section id="alertBanner" class="alert-banner" hidden role="status"><strong>Reading is at or above the demo threshold.</strong><span>This is not calibrated as an LPG alarm.</span></section>
-        <section id="offlineBanner" class="offline-banner" hidden role="status">No MQ-2 reading received in the last two minutes.</section>
-        <section class="summary-grid" aria-label="MQ-2 summary">
-          <article class="summary-card"><span class="card-label">LAST READING</span><div class="metric-line"><strong id="lastReading">—</strong><span class="metric-unit">raw ADC</span></div><p class="card-foot" id="lastReadingTime">No reading yet</p></article>
-          <article class="summary-card"><span class="card-label">LAST 24-HOUR AVERAGE</span><div class="metric-line"><strong id="average24h">—</strong><span class="metric-unit">raw ADC</span></div><p class="card-foot">Average of saved readings in the last 24 hours</p></article>
-          <article class="summary-card"><span class="card-label">EMAILS SENT</span><div class="metric-line"><strong id="emailsSent">0</strong><span class="metric-unit">total</span></div><p class="card-foot">Successful sends logged by the API</p></article>
-          <article class="summary-card"><span class="card-label">LAST THRESHOLD HIT</span><div class="metric-line"><strong id="thresholdValue">—</strong><span class="metric-unit">raw ADC</span></div><p class="card-foot" id="thresholdTime">No threshold hit recorded</p></article>
-        </section>
-        <section class="content-grid">
-          <article class="panel chart-panel">
-            <div class="panel-heading chart-heading"><div><p class="eyebrow">HISTORY</p><h2>MQ-2 readings over time</h2><p class="panel-subtitle" id="rangeDescription">Load data to see the chart</p></div>
-              <div class="range-tabs" role="group" aria-label="Graph range"><button class="range-button active" data-period="daily" aria-pressed="true">Daily</button><button class="range-button" data-period="weekly" aria-pressed="false">Weekly</button><button class="range-button" data-period="monthly" aria-pressed="false">Monthly</button></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f6f7" />
+    <title>MQ-2 monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../static/css/dashboard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script defer src="/static/js/dashboard.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/">Gas monitor</a>
+        <nav class="section-nav" aria-label="Monitor section">
+          <button
+            class="nav-button active"
+            data-view="leakage"
+            aria-pressed="true"
+          >
+            Leakage
+          </button>
+          <button class="nav-button" data-view="weight" aria-pressed="false">
+            Weight
+          </button>
+        </nav>
+        <div class="header-actions">
+          <span class="connection-dot" id="connectionDot"></span
+          ><span id="connectionText">Not loaded</span
+          ><button id="refreshButton" class="refresh-button">
+            Get recent data
+          </button>
+        </div>
+      </header>
+      <main>
+        <div id="errorBanner" class="error-banner" hidden role="alert"></div>
+        <section id="leakagePage" class="page-view">
+          <section class="page-heading">
+            <div>
+              <p class="eyebrow">MQ-2 SENSOR</p>
+              <h1>Gas leakage readings</h1>
+              <p class="subheading">Raw sensor values recorded in Neon</p>
             </div>
-            <div class="chart-wrap"><canvas id="readingsChart" aria-label="MQ-2 reading graph"></canvas><div id="chartEmpty" class="chart-empty" hidden>No readings for this period.</div></div>
-            <div class="chart-legend"><span><i class="legend-dot"></i>Average raw reading</span><span id="sampleHint"></span></div>
-          </article>
-          <article class="panel signal-panel"><div class="panel-heading"><div><p class="eyebrow">CURRENT LEVEL</p><h2>MQ-2 raw signal</h2></div><span id="sensorStatus" class="status-pill">—</span></div>
-            <div class="meter-value"><strong id="meterValue">—</strong><span>/ 65,535</span></div><div class="meter-track"><div id="meterFill" class="meter-fill"></div><span id="thresholdMarker" class="threshold-marker"></span></div><div class="meter-scale"><span>0</span><span id="thresholdLabel">Threshold —</span><span>65,535</span></div><p class="small-note">Raw ADC counts are shown; this value is not ppm.</p>
+            <div class="updated-box">
+              <span class="updated-label">DATA FETCHED</span
+              ><strong id="updatedAt">Not loaded yet</strong>
+            </div>
+          </section>
+          <section id="alertBanner" class="alert-banner" hidden role="status">
+            <strong>Reading is at or above the demo threshold.</strong
+            ><span>This is not calibrated as an LPG alarm.</span>
+          </section>
+          <section
+            id="offlineBanner"
+            class="offline-banner"
+            hidden
+            role="status"
+          >
+            No MQ-2 reading received in the last two minutes.
+          </section>
+          <section class="summary-grid" aria-label="MQ-2 summary">
+            <article class="summary-card">
+              <span class="card-label">LAST READING</span>
+              <div class="metric-line">
+                <strong id="lastReading">—</strong
+                ><span class="metric-unit">raw ADC</span>
+              </div>
+              <p class="card-foot" id="lastReadingTime">No reading yet</p>
+            </article>
+            <article class="summary-card">
+              <span class="card-label">LAST 24-HOUR AVERAGE</span>
+              <div class="metric-line">
+                <strong id="average24h">—</strong
+                ><span class="metric-unit">raw ADC</span>
+              </div>
+              <p class="card-foot">
+                Average of saved readings in the last 24 hours
+              </p>
+            </article>
+            <article class="summary-card">
+              <span class="card-label">EMAILS SENT</span>
+              <div class="metric-line">
+                <strong id="emailsSent">0</strong
+                ><span class="metric-unit">total</span>
+              </div>
+              <p class="card-foot">Successful sends logged by the API</p>
+            </article>
+            <article class="summary-card">
+              <span class="card-label">LAST THRESHOLD HIT</span>
+              <div class="metric-line">
+                <strong id="thresholdValue">—</strong
+                ><span class="metric-unit">raw ADC</span>
+              </div>
+              <p class="card-foot" id="thresholdTime">
+                No threshold hit recorded
+              </p>
+            </article>
+          </section>
+          <section class="content-grid">
+            <article class="panel chart-panel">
+              <div class="panel-heading chart-heading">
+                <div>
+                  <p class="eyebrow">HISTORY</p>
+                  <h2>MQ-2 readings over time</h2>
+                  <p class="panel-subtitle" id="rangeDescription">
+                    Load data to see the chart
+                  </p>
+                </div>
+                <div class="range-tabs" role="group" aria-label="Graph range">
+                  <button
+                    class="range-button active"
+                    data-period="daily"
+                    aria-pressed="true"
+                  >
+                    Daily</button
+                  ><button
+                    class="range-button"
+                    data-period="weekly"
+                    aria-pressed="false"
+                  >
+                    Weekly</button
+                  ><button
+                    class="range-button"
+                    data-period="monthly"
+                    aria-pressed="false"
+                  >
+                    Monthly
+                  </button>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas
+                  id="readingsChart"
+                  aria-label="MQ-2 reading graph"
+                ></canvas>
+                <div id="chartEmpty" class="chart-empty" hidden>
+                  No readings for this period.
+                </div>
+              </div>
+              <div class="chart-legend">
+                <span><i class="legend-dot"></i>Average raw reading</span
+                ><span id="sampleHint"></span>
+              </div>
+            </article>
+            <article class="panel signal-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">CURRENT LEVEL</p>
+                  <h2>MQ-2 raw signal</h2>
+                </div>
+                <span id="sensorStatus" class="status-pill">—</span>
+              </div>
+              <div class="meter-value">
+                <strong id="meterValue">—</strong><span>/ 65,535</span>
+              </div>
+              <div class="meter-track">
+                <div id="meterFill" class="meter-fill"></div>
+                <span id="thresholdMarker" class="threshold-marker"></span>
+              </div>
+              <div class="meter-scale">
+                <span>0</span><span id="thresholdLabel">Threshold —</span
+                ><span>65,535</span>
+              </div>
+              <p class="small-note">
+                Raw ADC counts are shown; this value is not ppm.
+              </p>
+            </article>
+          </section>
+          <footer class="page-footer">
+            <span
+              >Daily = 5-minute averages · weekly = hourly averages · monthly =
+              daily averages.</span
+            ><span>Use “Get recent data” to query Neon again.</span>
+          </footer>
+        </section>
+        <section id="weightPage" class="page-view" hidden>
+          <section class="page-heading">
+            <div>
+              <p class="eyebrow">LOAD CELL</p>
+              <h1>Cylinder weight</h1>
+              <p class="subheading">
+                Cylinder remaining will appear here when load-cell readings are
+                connected.
+              </p>
+            </div>
+          </section>
+          <article class="panel weight-panel">
+            <div class="weight-heading">
+              <div>
+                <p class="eyebrow">GAS REMAINING</p>
+                <h2 id="weightPercent">Waiting for load-cell data</h2>
+              </div>
+              <span id="weightFigure" class="weight-figure">kg</span>
+            </div>
+            <div class="cylinder-track">
+              <div id="cylinderFill" class="cylinder-fill"></div>
+            </div>
+            <p id="weightDetails" class="small-note">
+              No load-cell measurements are currently stored in Neon.
+            </p>
           </article>
         </section>
-        <footer class="page-footer"><span>Daily = 5-minute averages · weekly = hourly averages · monthly = daily averages.</span><span>Use “Get recent data” to query Neon again.</span></footer>
-      </section>
-      <section id="weightPage" class="page-view" hidden>
-        <section class="page-heading"><div><p class="eyebrow">LOAD CELL</p><h1>Cylinder weight</h1><p class="subheading">Cylinder remaining will appear here when load-cell readings are connected.</p></div></section>
-        <article class="panel weight-panel"><div class="weight-heading"><div><p class="eyebrow">GAS REMAINING</p><h2 id="weightPercent">Waiting for load-cell data</h2></div><span id="weightFigure" class="weight-figure">kg</span></div><div class="cylinder-track"><div id="cylinderFill" class="cylinder-fill"></div></div><p id="weightDetails" class="small-note">No load-cell measurements are currently stored in Neon.</p></article>
-      </section>
-    </main>
-  </div>
-</body>
+      </main>
+    </div>
+  </body>
 </html>

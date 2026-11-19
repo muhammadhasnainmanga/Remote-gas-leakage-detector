@@ -14,12 +14,17 @@ from email_alert import send_lpg_alert
 
 DATABASE_URL = 'postgresql://neondb_owner:npg_cpNXR0EOgD4j@ep-misty-meadow-bev3ppdk-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
 DEVICE_TOKEN = '8nmWa9S8z62d3Ts3RdDB68MNfjCIxWt8mTcBFCatjtw'
-LPG_RAW_THRESHOLD = 5000  # Demo threshold only; calibrate before claiming LPG detection.
+
+LPG_RAW_THRESHOLD = 17000  # Demo threshold only; calibrate before claiming LPG detection.
+
 last_email_sent_at = 0.0
+
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / 'static'
 
+#just like initializing app in js idher fastapi karwa rhe
 app = FastAPI(title='MQ-2 Dashboard API', version='1.1.0')
+
 app.mount('/static', StaticFiles(directory=STATIC_DIR), name='static')
 
 
@@ -38,6 +43,7 @@ def require_device_token(authorization: str | None) -> None:
         raise HTTPException(status_code=401, detail='Unauthorized')
 
 
+#run on startup and make sure everything is set up
 @app.on_event('startup')
 def ensure_dashboard_tables() -> None:
     try:
@@ -77,12 +83,13 @@ def ensure_dashboard_tables() -> None:
 def dashboard_page():
     return FileResponse(STATIC_DIR / 'index.html')
 
-
+#just for checking if the server is working or not
 @app.get('/health')
 def health():
     return {'status': 'ok'}
 
 
+#sending threeshold alert after 60 sec from the last one, if it is reached right now
 def maybe_send_threshold_alert(value: int, device_id: str, reading_id: int) -> bool:
     global last_email_sent_at
     if value < LPG_RAW_THRESHOLD:
@@ -109,6 +116,7 @@ def maybe_send_threshold_alert(value: int, device_id: str, reading_id: int) -> b
         return False
 
 
+#sending reading on the database via server
 @app.post('/api/readings', status_code=201)
 def create_reading(reading: Reading, authorization: str | None = Header(default=None)):
     require_device_token(authorization)
@@ -128,25 +136,28 @@ def create_reading(reading: Reading, authorization: str | None = Header(default=
             'recorded_at': recorded_at.isoformat()}
 
 
-@app.post('/api/load-cell', status_code=201)
-def create_load_cell_reading(reading: LoadCellReading,
-                             authorization: str | None = Header(default=None)):
-    require_device_token(authorization)
-    try:
-        with psycopg.connect(DATABASE_URL, connect_timeout=10) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    'INSERT INTO load_cell_readings (weight_grams, device_id) VALUES (%s, %s) RETURNING id, recorded_at',
-                    (reading.weight_grams, reading.device_id),
-                )
-                row_id, recorded_at = cursor.fetchone()
-    except psycopg.Error as exc:
-        print(f'Load-cell insert failed: {type(exc).__name__}')
-        raise HTTPException(status_code=503, detail='Load-cell insert failed') from exc
-    return {'id': row_id, 'weight_grams': reading.weight_grams,
-            'device_id': reading.device_id, 'recorded_at': recorded_at.isoformat()}
+#sending load cell reading 
+
+# @app.post('/api/load-cell', status_code=201)
+# def create_load_cell_reading(reading: LoadCellReading,
+#                              authorization: str | None = Header(default=None)):
+#     require_device_token(authorization)
+#     try:
+#         with psycopg.connect(DATABASE_URL, connect_timeout=10) as connection:
+#             with connection.cursor() as cursor:
+#                 cursor.execute(
+#                     'INSERT INTO load_cell_readings (weight_grams, device_id) VALUES (%s, %s) RETURNING id, recorded_at',
+#                     (reading.weight_grams, reading.device_id),
+#                 )
+#                 row_id, recorded_at = cursor.fetchone()
+#     except psycopg.Error as exc:
+#         print(f'Load-cell insert failed: {type(exc).__name__}')
+#         raise HTTPException(status_code=503, detail='Load-cell insert failed') from exc
+#     return {'id': row_id, 'weight_grams': reading.weight_grams,
+#             'device_id': reading.device_id, 'recorded_at': recorded_at.isoformat()}
 
 
+#getting all the required value for dashboard
 @app.get('/api/dashboard')
 def dashboard_data(period: str = Query(default='daily')):
     if period not in {'daily', 'weekly', 'monthly'}:
