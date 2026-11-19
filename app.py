@@ -151,35 +151,39 @@ def create_load_cell_reading(reading: LoadCellReading,
 def dashboard_data(period: str = Query(default='daily')):
     if period not in {'daily', 'weekly', 'monthly'}:
         raise HTTPException(status_code=422, detail='period must be daily, weekly, or monthly')
+
     windows = {'daily': '24 hours', 'weekly': '7 days', 'monthly': '30 days'}
-    unit = 'hour' if period == 'daily' else 'day'
-    bucket_expr = (
-        f"date_trunc('{unit}', recorded_at AT TIME ZONE 'Asia/Karachi') "
-        "AT TIME ZONE 'Asia/Karachi'"
-    )
+    bucket_widths = {'daily': '5 minutes', 'weekly': '1 hour', 'monthly': '1 day'}
     try:
         with psycopg.connect(DATABASE_URL, connect_timeout=10) as connection:
             with connection.cursor(row_factory=dict_row) as cursor:
                 cursor.execute('SELECT value, device_id, recorded_at FROM mq2_readings ORDER BY recorded_at DESC LIMIT 1')
                 latest = cursor.fetchone()
                 cursor.execute('''
-                    SELECT AVG(value)::double precision AS average FROM mq2_readings
-                    WHERE recorded_at >= (date_trunc('day', NOW() AT TIME ZONE 'Asia/Karachi') AT TIME ZONE 'Asia/Karachi')
+                    SELECT AVG(value)::double precision AS average
+                    FROM mq2_readings WHERE recorded_at >= NOW() - INTERVAL '24 hours'
                 ''')
-                daily_average = cursor.fetchone()['average']
-                cursor.execute(f'''
-                    SELECT {bucket_expr} AS bucket, AVG(value)::double precision AS average,
-                           MIN(value) AS minimum, MAX(value) AS maximum
-                    FROM mq2_readings WHERE recorded_at >= NOW() - %s::interval
+                average_24h = cursor.fetchone()['average']
+                cursor.execute('''
+                    SELECT date_bin(%s::interval, recorded_at, TIMESTAMPTZ '2000-01-01 00:00:00+00') AS bucket,
+                           AVG(value)::double precision AS average,
+                           MIN(value) AS minimum, MAX(value) AS maximum, COUNT(*) AS samples
+                    FROM mq2_readings
+                    WHERE recorded_at >= NOW() - %s::interval
                     GROUP BY bucket ORDER BY bucket
-                ''', (windows[period],))
+                ''', (bucket_widths[period], windows[period]))
                 points = cursor.fetchall()
-                cursor.execute('SELECT recorded_at FROM mq2_readings WHERE value >= %s ORDER BY recorded_at DESC LIMIT 1',
-                               (LPG_RAW_THRESHOLD,))
+                cursor.execute('''
+                    SELECT value, recorded_at FROM mq2_readings
+                    WHERE value >= %s ORDER BY recorded_at DESC LIMIT 1
+                ''', (LPG_RAW_THRESHOLD,))
                 detection = cursor.fetchone()
-                cursor.execute('SELECT COUNT(*) AS total, MAX(sent_at) AS last_sent_at FROM mq2_email_alerts')
+                cursor.execute('SELECT COUNT(*) AS total FROM mq2_email_alerts')
                 emails = cursor.fetchone()
-                cursor.execute('SELECT weight_grams, device_id, recorded_at FROM load_cell_readings ORDER BY recorded_at DESC LIMIT 1')
+                cursor.execute('''
+                    SELECT weight_grams, device_id, recorded_at
+                    FROM load_cell_readings ORDER BY recorded_at DESC LIMIT 1
+                ''')
                 load_cell = cursor.fetchone()
     except psycopg.Error as exc:
         print(f'Dashboard query failed: {type(exc).__name__}')
@@ -205,12 +209,17 @@ def dashboard_data(period: str = Query(default='daily')):
             'latest_at': _iso(latest_at),
             'device_id': latest['device_id'] if latest else None,
             'status': status,
-            'daily_average': round(float(daily_average), 1) if daily_average is not None else None,
-            'last_detection_at': _iso(detection['recorded_at']) if detection else None,
-            'points': [{'time': _iso(row['bucket']), 'average': round(float(row['average']), 1),
-                        'minimum': row['minimum'], 'maximum': row['maximum']} for row in points],
+            'average_24h': round(float(average_24h), 1) if average_24h is not None else None,
+            'last_threshold_hit': {
+                'value': detection['value'], 'time': _iso(detection['recorded_at'])
+            } if detection else None,
+            'points': [
+                {'time': _iso(row['bucket']), 'average': round(float(row['average']), 1),
+                 'minimum': row['minimum'], 'maximum': row['maximum'], 'samples': row['samples']}
+                for row in points
+            ],
         },
-        'emails': {'total': int(emails['total']), 'last_sent_at': _iso(emails['last_sent_at'])},
+        'emails': {'total': int(emails['total'])},
         'cylinder': {
             'has_reading': load_cell is not None,
             'weight_grams': round(weight_g, 1) if weight_g is not None else None,
@@ -219,7 +228,6 @@ def dashboard_data(period: str = Query(default='daily')):
             'calibrated': percent is not None,
         },
     }
-
 
 def _iso(value):
     return value.isoformat() if value is not None else None

@@ -4,7 +4,9 @@ The FastAPI service accepts Pico W samples, stores them in Neon, sends threshold
 
 ## Dashboard
 
-The dashboard shows the latest raw MQ-2 value, current threshold status, today's average, hourly averages for the last 24 hours, daily averages for the last 7 and 30 days, successful email count, latest raw-threshold hit, and the cylinder load-cell card. It refreshes every 15 seconds.
+The dashboard has separate Leakage and Weight views. Leakage shows the latest raw MQ-2 reading and time, a rolling 24-hour average, total successful emails, the latest threshold-hit value and time, a current-reading bar, and daily/weekly/monthly graphs. It fetches on page load and has a button to request fresh data; it does not poll continuously.
+
+The daily graph uses 5-minute averages, weekly uses hourly averages, and monthly uses daily averages. The API groups readings in Neon before sending them to the browser, so a high sample count remains manageable while the chart preserves within-day changes.
 
 The dashboard data endpoint is `GET /api/dashboard?period=daily|weekly|monthly`. It is read-only and public. Database credentials and the Pico token are only used by the backend.
 
