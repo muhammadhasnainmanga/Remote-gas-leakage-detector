@@ -1,31 +1,28 @@
-# MQ-2 readings API
+# MQ-2 dashboard and readings API
 
-The Pico W sends raw 16-bit ADC samples to this service. The service checks a
-shared bearer token and inserts each sample into Neon PostgreSQL.
+The FastAPI service accepts Pico W samples, stores them in Neon, sends threshold reminder emails, and serves the dashboard at `/` from the same Azure App Service.
 
-## Local setup
+## Dashboard
 
-The Pico W is powered from the laptop USB port and joins the same Wi-Fi network
-as the laptop. The Pico posts each raw 16-bit MQ-2 ADC sample to the laptop's
-local API, and the API inserts it into Neon. The current Pico URL is
-`http://192.168.1.140:8000/api/readings`; update that address in `newMQ2.py`
-if the laptop receives a different Wi-Fi IP later.
+The dashboard shows the latest raw MQ-2 value, current threshold status, today's average, hourly averages for the last 24 hours, daily averages for the last 7 and 30 days, successful email count, latest raw-threshold hit, and the cylinder load-cell card. It refreshes every 15 seconds.
 
-Run `python -m pip install -r requirements.txt` once, then start the API from
-this directory with `python -m uvicorn app:app --host 0.0.0.0 --port 8000`.
-Keep the laptop and Pico on the same Wi-Fi network. The Neon table
-`mq2_readings` must already exist.
+The dashboard data endpoint is `GET /api/dashboard?period=daily|weekly|monthly`. It is read-only and public. Database credentials and the Pico token are only used by the backend.
 
-The Wi-Fi, API token, and Neon connection settings are currently written
-directly in the source files for this local setup.
+## Device endpoints
 
-## Endpoint
+- `POST /api/readings` body: `{"value": 12345, "device_id": "pico-mq2-1"}`
+- `POST /api/load-cell` body: `{"weight_grams": 12500, "device_id": "pico-mq2-1"}`
 
-`POST /api/readings`
+Both endpoints require `Authorization: Bearer <DEVICE_TOKEN>`. The current Pico sends MQ-2 readings; it does not yet send load-cell readings.
 
-Header: `Authorization: Bearer <DEVICE_TOKEN>`
+## Neon tables and cylinder setup
 
-JSON body: `{"value": 12345, "device_id": "pico-mq2-1"}`
+`mq2_readings` is the existing sensor table. On startup, the API creates `mq2_email_alerts` for successfully sent emails and `load_cell_readings` for load-cell samples. The email count starts with sends recorded after this version is deployed; earlier email sends cannot be reconstructed.
 
-Successful inserts return HTTP 201 and the inserted row's ID and database
-timestamp. `GET /health` is a public service health check.
+To calculate cylinder percentage, set `CYLINDER_EMPTY_WEIGHT_G` to the empty cylinder's gross weight and `CYLINDER_FULL_WEIGHT_G` to its full gross weight in App Service environment variables. The API uses the latest load-cell weight and clamps the result to 0–100%.
+
+The configured MQ-2 threshold is a temporary raw ADC demo value, not calibrated LPG ppm. Calibrate before presenting it as an LPG detection level.
+
+## Local run
+
+Install `requirements.txt`, then run `python -m uvicorn app:app --host 0.0.0.0 --port 8000`. The Neon table `mq2_readings` must already exist.

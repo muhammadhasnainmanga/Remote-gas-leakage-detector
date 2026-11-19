@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f7fb">
+  <title>MQ-2 Gas Monitor Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script defer src="/static/js/dashboard.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Home gas monitor dashboard"><span class="brand-mark" aria-hidden="true">⌁</span><span>SafeKitchen<span class="brand-dot">.</span></span></a>
+      <div class="connection"><span id="connectionDot" class="connection-dot"></span><span id="connectionText">Connecting to sensor…</span></div>
+    </header>
+    <main>
+      <section class="page-heading"><div><p class="eyebrow">HOME MONITORING</p><h1>Gas sensor dashboard</h1><p class="subheading">MQ-2 readings, alert activity, and cylinder level</p></div><div class="updated-box"><span class="updated-label">LAST UPDATED</span><strong id="updatedAt">—</strong></div></section>
+      <section id="alertBanner" class="alert-banner" hidden role="status"><span class="alert-icon" aria-hidden="true">!</span><div><strong>Reading is above the demo threshold</strong><p>This is a raw sensor threshold, not a calibrated LPG alarm.</p></div></section>
+      <section id="offlineBanner" class="offline-banner" hidden role="status">No recent MQ-2 reading. Check the Pico connection.</section>
+      <section id="errorBanner" class="error-banner" hidden role="alert"></section>
+      <section class="summary-grid" aria-label="Sensor summary">
+        <article class="summary-card primary-card"><div class="card-top"><span class="card-label">CURRENT MQ-2</span><span id="sensorStatus" class="status-pill">—</span></div><div class="metric-line"><strong id="currentValue">—</strong><span class="metric-unit">raw ADC</span></div><p class="card-foot" id="currentReadingAt">Waiting for a reading</p></article>
+        <article class="summary-card"><span class="card-label">TODAY’S AVERAGE</span><div class="metric-line"><strong id="dailyAverage">—</strong><span class="metric-unit">raw ADC</span></div><p class="card-foot">Average of today’s saved readings</p></article>
+        <article class="summary-card"><span class="card-label">EMAILS SENT</span><div class="metric-line"><strong id="emailsSent">0</strong><span class="metric-unit">total</span></div><p class="card-foot" id="lastEmailAt">No successful email logged yet</p></article>
+        <article class="summary-card"><span class="card-label">LAST THRESHOLD HIT</span><div class="date-metric" id="lastDetection">No threshold hit recorded</div><p class="card-foot">Latest raw reading at or above threshold</p></article>
+      </section>
+      <section class="main-grid">
+        <article class="panel chart-panel">
+          <div class="panel-heading chart-heading"><div><p class="eyebrow">READING HISTORY</p><h2>MQ-2 raw values</h2><p class="panel-subtitle">Average sensor value for each time bucket</p></div><div class="range-tabs" role="group" aria-label="Chart range"><button class="range-button active" data-period="daily" aria-pressed="true">Day</button><button class="range-button" data-period="weekly" aria-pressed="false">Week</button><button class="range-button" data-period="monthly" aria-pressed="false">Month</button></div></div>
+          <div class="chart-wrap"><canvas id="readingsChart" aria-label="MQ-2 reading history chart"></canvas><div id="chartEmpty" class="chart-empty" hidden>No readings in this range yet.</div></div>
+          <div class="chart-legend"><span><i class="legend-dot"></i>Average raw ADC</span><span id="rangeDescription">Last 24 hours · hourly averages</span></div>
+        </article>
+        <div class="side-stack">
+          <article class="panel sensor-panel"><div class="panel-heading"><div><p class="eyebrow">SIGNAL LEVEL</p><h2>MQ-2 sensor</h2></div><span class="sensor-symbol" aria-hidden="true">◉</span></div><div class="meter-value"><strong id="meterValue">—</strong><span>/ 65,535</span></div><div class="meter-track" aria-label="MQ-2 ADC reading relative to full scale"><div id="meterFill" class="meter-fill"></div><span id="thresholdMarker" class="threshold-marker" title="Configured raw threshold"></span></div><div class="meter-scale"><span>0</span><span id="thresholdLabel">Threshold —</span><span>65,535</span></div><p class="small-note">The bar shows raw Pico ADC level, not gas concentration in ppm.</p></article>
+          <article class="panel cylinder-panel"><div class="panel-heading"><div><p class="eyebrow">LOAD CELL</p><h2>Cylinder remaining</h2></div><span class="cylinder-icon" aria-hidden="true">▤</span></div><div class="cylinder-value"><strong id="cylinderPercent">—</strong><span id="cylinderWeight">No weight data</span></div><div class="cylinder-track"><div id="cylinderFill" class="cylinder-fill"></div></div><p class="small-note" id="cylinderMessage">Waiting for load-cell readings and cylinder calibration.</p></article>
+        </div>
+      </section>
+      <footer class="page-footer"><span>MQ-2 values are uncalibrated raw ADC readings.</span><span>Dashboard refreshes every 15 seconds.</span></footer>
+    </main>
+  </div>
+</body>
+</html>
