@@ -5,8 +5,8 @@ import smtplib
 from email.message import EmailMessage
 
 # Put the visible email addresses here.
-EMAIL_FROM = "your-sender@gmail.com"
-EMAIL_TO = "owner@example.com"
+EMAIL_FROM = "muhammadhasnainmanga@gmail.com"
+EMAIL_TO = "muhammadhasnainmanga@gmail.com"
 
 
 def send_lpg_alert(value: int, device_id: str, threshold: int) -> None:
