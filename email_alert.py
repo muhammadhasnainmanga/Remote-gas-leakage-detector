@@ -17,7 +17,7 @@ def send_lpg_alert(value: int, device_id: str, threshold: int) -> None:
     password = os.environ["SMTP_PASSWORD"]
 
     message = EmailMessage()
-    message["Subject"] = "MQ-2 reading crossed the configured threshold"
+    message["Subject"] = "Alert !! MQ-2 reading crossed the configured threshold"
     message["From"] = EMAIL_FROM
     message["To"] = EMAIL_TO
     message.set_content(
