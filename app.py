@@ -12,7 +12,7 @@ DEVICE_TOKEN = '8nmWa9S8z62d3Ts3RdDB68MNfjCIxWt8mTcBFCatjtw'
 app = FastAPI(title="MQ-2 readings API", version="1.0.0")
 
 # Set this to the calibrated raw ADC threshold. None keeps alerts off.
-LPG_RAW_THRESHOLD = None
+LPG_RAW_THRESHOLD = 5000
 last_email_sent_at = 0
 
 
