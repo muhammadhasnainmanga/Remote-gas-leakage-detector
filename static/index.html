@@ -18,7 +18,7 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="/">Gas monitor</a>
+        <a class="brand" href="/" aria-label="SafeKitchen home"><span class="brand-mark" aria-hidden="true">⌁</span><span>SafeKitchen<span class="brand-dot">.</span></span></a>
         <nav class="section-nav" aria-label="Monitor section">
           <button
             class="nav-button active"
@@ -116,8 +116,14 @@
                 <div class="range-tabs" role="group" aria-label="Graph range">
                   <button
                     class="range-button active"
-                    data-period="daily"
+                    data-period="hourly"
                     aria-pressed="true"
+                  >
+                    Hourly</button
+                  ><button
+                    class="range-button"
+                    data-period="daily"
+                    aria-pressed="false"
                   >
                     Daily</button
                   ><button
@@ -125,13 +131,7 @@
                     data-period="weekly"
                     aria-pressed="false"
                   >
-                    Weekly</button
-                  ><button
-                    class="range-button"
-                    data-period="monthly"
-                    aria-pressed="false"
-                  >
-                    Monthly
+                    Weekly
                   </button>
                 </div>
               </div>
@@ -175,8 +175,8 @@
           </section>
           <footer class="page-footer">
             <span
-              >Daily = 5-minute averages · weekly = hourly averages · monthly =
-              daily averages.</span
+              >Hourly = 1-minute averages · daily = 5-minute averages · weekly =
+              hourly averages.</span
             ><span>Use “Get recent data” to query Neon again.</span>
           </footer>
         </section>

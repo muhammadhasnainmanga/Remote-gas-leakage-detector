@@ -1,12 +1,12 @@
 const $ = (id) => document.getElementById(id);
 let chart = null;
-let currentPeriod = 'daily';
+let currentPeriod = 'hourly';
 let currentView = 'leakage';
 
 const rangeDescriptions = {
-  daily: 'Last 24 hours · average of readings in each 5-minute interval',
+  hourly: 'Last hour · 1-minute averages (about 660 readings at 11 per minute)',
+  daily: 'Last 24 hours · 5-minute averages',
   weekly: 'Last 7 days · hourly averages',
-  monthly: 'Last 30 days · daily averages',
 };
 
 const numberFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
@@ -29,15 +29,15 @@ function renderChart(points, period) {
   }
   const labels = points.map((point) => {
     const date = new Date(point.time);
-    return period === 'daily'
-      ? date.toLocaleTimeString([], { timeZone: 'Asia/Karachi', hour: 'numeric', minute: '2-digit' })
-      : date.toLocaleDateString([], { timeZone: 'Asia/Karachi', month: 'short', day: 'numeric' });
+    return period === 'weekly'
+      ? date.toLocaleString([], { timeZone: 'Asia/Karachi', month: 'short', day: 'numeric', hour: 'numeric' })
+      : date.toLocaleTimeString([], { timeZone: 'Asia/Karachi', hour: 'numeric', minute: '2-digit' });
   });
   const values = points.map((point) => point.average);
   if (!chart) {
     chart = new Chart($('readingsChart'), {
       type: 'line',
-      data: { labels, datasets: [{ label: 'Average raw ADC', data: values, sampleCounts: points.map((point) => point.samples), borderColor: '#557895', backgroundColor: 'rgba(85,120,149,.10)', borderWidth: 2, fill: true, tension: .2, pointRadius: period === 'daily' ? 0 : 2, pointHoverRadius: 4 }] },
+      data: { labels, datasets: [{ label: 'Average raw ADC', data: values, sampleCounts: points.map((point) => point.samples), borderColor: '#557895', backgroundColor: 'rgba(85,120,149,.10)', borderWidth: 2, fill: true, tension: .2, pointRadius: 0, pointHoverRadius: 4 }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         interaction: { intersect: false, mode: 'index' },
@@ -55,7 +55,6 @@ function renderChart(points, period) {
     chart.data.labels = labels;
     chart.data.datasets[0].data = values;
     chart.data.datasets[0].sampleCounts = points.map((point) => point.samples);
-    chart.data.datasets[0].pointRadius = period === 'daily' ? 0 : 2;
     chart.update();
   }
 }

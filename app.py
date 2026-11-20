@@ -99,7 +99,9 @@ def maybe_send_threshold_alert(value: int, device_id: str, reading_id: int) -> b
         return False
     last_email_sent_at = now
     try:
+        #sending mail
         send_lpg_alert(value, device_id, LPG_RAW_THRESHOLD)
+        #adding the data in to databse
         try:
             with psycopg.connect(DATABASE_URL, connect_timeout=10) as connection:
                 with connection.cursor() as cursor:
@@ -159,12 +161,12 @@ def create_reading(reading: Reading, authorization: str | None = Header(default=
 
 #getting all the required value for dashboard
 @app.get('/api/dashboard')
-def dashboard_data(period: str = Query(default='daily')):
-    if period not in {'daily', 'weekly', 'monthly'}:
-        raise HTTPException(status_code=422, detail='period must be daily, weekly, or monthly')
+def dashboard_data(period: str = Query(default='hourly')):
+    if period not in {'hourly', 'daily', 'weekly'}:
+        raise HTTPException(status_code=422, detail='period must be hourly, daily, or weekly')
 
-    windows = {'daily': '24 hours', 'weekly': '7 days', 'monthly': '30 days'}
-    bucket_widths = {'daily': '5 minutes', 'weekly': '1 hour', 'monthly': '1 day'}
+    windows = {'hourly': '1 hour', 'daily': '24 hours', 'weekly': '7 days'}
+    bucket_widths = {'hourly': '1 minute', 'daily': '5 minutes', 'weekly': '1 hour'}
     try:
         with psycopg.connect(DATABASE_URL, connect_timeout=10) as connection:
             with connection.cursor(row_factory=dict_row) as cursor:
