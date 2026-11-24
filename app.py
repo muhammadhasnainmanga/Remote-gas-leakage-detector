@@ -157,6 +157,10 @@ def ensure_dashboard_tables() -> None:
                     cursor.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS sequence BIGINT")
                     cursor.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS device_time TIMESTAMPTZ")
                     cursor.execute(f"""
+                        CREATE INDEX IF NOT EXISTS idx_{table}_recorded_at
+                        ON {table} (recorded_at DESC)
+                    """)
+                    cursor.execute(f"""
                         CREATE UNIQUE INDEX IF NOT EXISTS idx_{table}_device_sequence
                         ON {table} (device_id, boot_id, sequence)
                     """)

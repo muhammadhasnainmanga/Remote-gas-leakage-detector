@@ -76,3 +76,5 @@ ALTER TABLE mq2_readings ADD COLUMN IF NOT EXISTS boot_id TEXT;
 ALTER TABLE mq2_readings ADD COLUMN IF NOT EXISTS sequence BIGINT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mq2_readings_device_sequence
     ON mq2_readings (device_id, boot_id, sequence);
+CREATE INDEX IF NOT EXISTS idx_mq2_readings_recorded_at
+    ON mq2_readings (recorded_at DESC);
