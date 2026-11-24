@@ -28,7 +28,13 @@ function setText(id, value) { const element = $(id); if (element) element.textCo
 
 function toDisplayWeight(grams) { return weightUnit === 'kg' ? grams / 1000 : grams; }
 
-function displayWeight(grams) { return `${formatNumber(toDisplayWeight(grams))} ${weightUnit}`; }
+function formatWeightNumber(value) {
+  if (value === null || value === undefined) return '—';
+  const decimals = weightUnit === 'kg' ? 2 : 1;
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: decimals }).format(value);
+}
+
+function displayWeight(grams) { return `${formatWeightNumber(toDisplayWeight(grams))} ${weightUnit}`; }
 
 function setConnection(kind, text) {
   const dot = $('connectionDot');
@@ -102,11 +108,11 @@ function renderWeightChart(points, period) {
         interaction: { intersect: false, mode: 'index' },
         plugins: {
           legend: { display: false },
-          tooltip: { displayColors: false, callbacks: { label: (context) => `${formatNumber(context.parsed.y)} ${weightUnit}` } },
+          tooltip: { displayColors: false, callbacks: { label: (context) => `${formatWeightNumber(context.parsed.y)} ${weightUnit}` } },
         },
         scales: {
           x: { grid: { display: false }, ticks: { color: '#8a949c', maxTicksLimit: 9, maxRotation: 0 } },
-          y: { beginAtZero: false, title: { display: true, text: `Gross weight (${weightUnit})` }, grid: { color: '#edf0f1' }, ticks: { color: '#8a949c', maxTicksLimit: 5 } },
+          y: { beginAtZero: false, title: { display: true, text: `Gross weight (${weightUnit})` }, grid: { color: '#edf0f1' }, ticks: { color: '#8a949c', maxTicksLimit: 5, callback: (value) => formatWeightNumber(value) } },
         },
       },
     });
