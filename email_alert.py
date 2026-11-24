@@ -32,6 +32,13 @@ def send_lpg_alert(value: int, device_id: str, threshold: int) -> None:
         with smtplib.SMTP_SSL(host, port, timeout=15) as smtp:
             smtp.login(username, password)
             smtp.send_message(message)
+    else:
+        with smtplib.SMTP(host, port, timeout=15) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+            smtp.login(username, password)
+            smtp.send_message(message)
 
 
 def send_low_weight_alert(weight_grams: float, empty_weight_grams: float,
@@ -56,13 +63,6 @@ def send_low_weight_alert(weight_grams: float, empty_weight_grams: float,
 
     if port == 465:
         with smtplib.SMTP_SSL(host, port, timeout=15) as smtp:
-            smtp.login(username, password)
-            smtp.send_message(message)
-    else:
-        with smtplib.SMTP(host, port, timeout=15) as smtp:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
             smtp.login(username, password)
             smtp.send_message(message)
     else:
