@@ -16,8 +16,8 @@ from psycopg.types.json import Jsonb
 from email_alert import send_cylinder_alert, send_mq2_alert
 
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-DEVICE_TOKEN = os.getenv("DEVICE_TOKEN")
+DATABASE_URL = 'postgresql://neondb_owner:npg_cpNXR0EOgD4j@ep-misty-meadow-bev3ppdk-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+DEVICE_TOKEN = '8nmWa9S8z62d3Ts3RdDB68MNfjCIxWt8mTcBFCatjtw'
 LPG_RAW_THRESHOLD = int(os.getenv("LPG_RAW_THRESHOLD", "17000"))
 MQ2_ALERT_SAMPLES = 10
 CYLINDER_LOW_GRAMS = 1000

@@ -18,13 +18,13 @@ Run [`loadcell_schema.sql`](loadcell_schema.sql) in the Neon SQL editor before d
 
 Empty-cylinder tare is configuration, separate from measurement history. It is stored server-side so the website and the email threshold use the same value. The website allows 0 kg until the tare is entered.
 
-## App settings
+## API configuration
 
-Use the names in [`.env.example`](.env.example) as Azure App Service application settings. Never commit actual credentials. Required values include `DATABASE_URL`, `DEVICE_TOKEN`, SMTP settings, and alert sender/recipient addresses. `LPG_RAW_THRESHOLD` defaults to 17000.
+The prototype keeps its database URL and device token directly in `app.py`; the alert sender and recipients are constants in `email_alert.py`. SMTP server login is read from environment variables (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, and `SMTP_PASSWORD`). The Pico Wi-Fi settings are in `Project2-source/main.py`, while its API URL and token are in `Project2-source/newMQ2.py`.
 
 ## Pico setup
 
-Copy `Project2-source/device_secrets.example.py` to `Project2-source/device_secrets.py`, fill in Wi-Fi, API URL, and the **new** device token, then copy `main.py`, `newMQ2.py`, and `device_secrets.py` to the Pico W. `main.py` attempts NTP clock synchronization; if that fails, server receive timestamps remain available.
+Copy `main.py` and `newMQ2.py` to the Pico W. Wi-Fi settings are directly in `main.py`; API URL and token are directly in `newMQ2.py`. `main.py` attempts NTP clock synchronization; if that fails, server receive timestamps remain available.
 
 The Pico timer is used only to set a flag every 15 seconds. Sampling the HX711 and making HTTP requests happen in the regular main loop, never in the interrupt callback.
 

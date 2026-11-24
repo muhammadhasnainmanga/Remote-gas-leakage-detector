@@ -1,8 +1,12 @@
-"""SMTP delivery helpers. Credentials and recipients come from app settings."""
+"""SMTP delivery helpers; server login uses environment settings."""
 
 import os
 import smtplib
 from email.message import EmailMessage
+
+
+EMAIL_FROM = 'muhammadhasnainmanga@gmail.com'
+EMAIL_TO = 'muhammadhasnainmanga@gmail.com, ishikaadvani16@gmail.com'
 
 
 def _send(subject: str, body: str) -> None:
@@ -10,14 +14,13 @@ def _send(subject: str, body: str) -> None:
     port = int(os.getenv("SMTP_PORT", "587"))
     username = os.environ["SMTP_USERNAME"]
     password = os.environ["SMTP_PASSWORD"]
-    sender = os.environ["ALERT_EMAIL_FROM"]
-    recipients = [item.strip() for item in os.environ["ALERT_EMAIL_TO"].split(",") if item.strip()]
+    recipients = [item.strip() for item in EMAIL_TO.split(",") if item.strip()]
     if not recipients:
-        raise ValueError("ALERT_EMAIL_TO has no recipients")
+        raise ValueError("EMAIL_TO has no recipients")
 
     message = EmailMessage()
     message["Subject"] = subject
-    message["From"] = sender
+    message["From"] = EMAIL_FROM
     message["To"] = ", ".join(recipients)
     message.set_content(body)
 
