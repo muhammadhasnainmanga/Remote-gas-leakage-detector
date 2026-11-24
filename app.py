@@ -83,7 +83,10 @@ def ensure_dashboard_tables() -> None:
 
 @app.get('/')
 def dashboard_page():
-    return FileResponse(STATIC_DIR / 'index.html')
+    return FileResponse(
+        STATIC_DIR / 'index.html',
+        headers={'Cache-Control': 'no-store, max-age=0'},
+    )
 
 #just for checking if the server is working or not
 @app.get('/health')
@@ -233,10 +236,11 @@ def update_cylinder_settings(settings: CylinderSettings):
 @app.get('/api/dashboard')
 def dashboard_data(period: str = Query(default='hourly'),
                    weight_period: str = Query(default='hourly')):
-    if period not in {'hourly', 'daily', 'weekly'}:
-        raise HTTPException(status_code=422, detail='period must be hourly, daily, or weekly')
-    if weight_period not in {'hourly', 'daily', 'weekly'}:
-        raise HTTPException(status_code=422, detail='weight_period must be hourly, daily, or weekly')
+    valid_periods = {'hourly', 'daily', 'weekly'}
+    if period not in valid_periods:
+        period = 'hourly'
+    if weight_period not in valid_periods:
+        weight_period = 'hourly'
 
     windows = {'hourly': '1 hour', 'daily': '24 hours', 'weekly': '7 days'}
     bucket_widths = {'hourly': '1 minute', 'daily': '5 minutes', 'weekly': '1 hour'}

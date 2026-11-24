@@ -16,6 +16,7 @@ const weightRangeDescriptions = {
   daily: 'Last 24 hours · individual readings',
   weekly: 'Last 7 days · individual readings',
 };
+const validPeriods = new Set(['hourly', 'daily', 'weekly']);
 
 const numberFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 const dateFormat = new Intl.DateTimeFormat(undefined, { timeZone: 'Asia/Karachi', dateStyle: 'medium', timeStyle: 'short' });
@@ -177,6 +178,8 @@ function renderData(data) {
 //getting all the last data, values, and all type of true and false
 async function fetchRecentData() {
   const button = $('refreshButton');
+  currentPeriod = validPeriods.has(currentPeriod) ? currentPeriod : 'hourly';
+  currentWeightPeriod = validPeriods.has(currentWeightPeriod) ? currentWeightPeriod : 'hourly';
   button.disabled = true;
   button.textContent = 'Fetching…';
   try {
