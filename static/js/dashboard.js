@@ -151,6 +151,7 @@ function renderData(data) {
   $('offlineBanner').hidden = sensor.status !== 'offline';
   const value = sensor.latest_value ?? 0;
   setText('meterValue', formatNumber(sensor.latest_value));
+  $('meterFill').className = `meter-fill ${sensor.status || ''}`;
   $('meterFill').style.width = `${Math.min(100, Math.max(0, value / 65535 * 100))}%`;
   const threshold = data.threshold ?? 0;
   $('thresholdMarker').style.left = `${Math.min(100, Math.max(0, threshold / 65535 * 100))}%`;

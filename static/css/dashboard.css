@@ -120,12 +120,12 @@ body {
 .refresh-button:focus-visible,
 .nav-button:focus-visible,
 .range-button:focus-visible {
-  outline: 2px solid #7893a8;
+  outline: 2px solid #63816d;
   outline-offset: 2px;
 }
 .range-button:hover:not(.active) {
-  color: #344b60;
-  background: #eef2f4;
+  color: #344c3e;
+  background: #e9eeeb;
 }
 .refresh-button:disabled {
   opacity: 0.55;
@@ -247,27 +247,29 @@ h2 {
 }
 .range-tabs {
   display: flex;
-  gap: 2px;
+  gap: 3px;
   padding: 3px;
-  border: 1px solid #e6e9eb;
-  border-radius: 6px;
-  background: #f7f8f8;
+  border: 1px solid #e1e6e3;
+  border-radius: 8px;
+  background: #f5f7f6;
 }
 .range-button {
-  border: 0;
-  border-radius: 4px;
-  padding: 6px 9px;
+  min-width: 70px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
   background: transparent;
-  color: #78838d;
-  font:
-    600 10px "DM Sans",
-    sans-serif;
+  color: #68756d;
+  font: 600 11px "DM Sans", sans-serif;
   cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
 }
 .range-button.active {
-  background: #fff;
-  color: #344b60;
-  box-shadow: 0 1px 2px #00000012;
+  border-color: #52745f;
+  background: #52745f;
+  color: #fff;
+  box-shadow: 0 1px 2px #274b3724;
 }
 .chart-wrap {
   height: 290px;
@@ -364,8 +366,14 @@ h2 {
   height: 100%;
   width: 0;
   border-radius: inherit;
-  background: #6889a2;
+  background: #648b78;
   transition: width 0.3s ease;
+}
+.meter-fill.alert {
+  background: #c27a61;
+}
+.meter-fill.offline {
+  background: #b7a36e;
 }
 .threshold-marker {
   position: absolute;
@@ -485,34 +493,7 @@ h2 {
 .weight-legend-dot {
   background: #648b78;
 }
-.weight-range-tabs {
-  flex: 0 0 auto;
-  gap: 3px;
-  padding: 3px;
-  border-color: #e1e6e3;
-  border-radius: 8px;
-  background: #f5f7f6;
-}
-.weight-range-tabs .range-button {
-  min-width: 70px;
-  min-height: 36px;
-  padding: 8px 12px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: #68756d;
-  font: 600 11px "DM Sans", sans-serif;
-  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
-}
-.weight-range-tabs .range-button:hover:not(.active) {
-  background: #e9eeeb;
-  color: #344c3e;
-}
-.weight-range-tabs .range-button.active {
-  border-color: #52745f;
-  background: #52745f;
-  color: #fff;
-  box-shadow: 0 1px 2px #274b3724;
-}
+.weight-range-tabs { flex: 0 0 auto; }
 .weight-heading {
   display: flex;
   justify-content: space-between;
@@ -563,7 +544,6 @@ h2 {
   background: #e9eeeb;
   color: #344c3e;
 }
-.weight-range-tabs .range-button:focus-visible,
 .unit-button:focus-visible,
 .settings-input-row .refresh-button:focus-visible {
   outline: 2px solid #63816d;
@@ -664,14 +644,10 @@ h2 {
     display: block;
   }
   .range-tabs {
-    width: max-content;
+    width: 100%;
     margin-top: 13px;
   }
-  .weight-range-tabs {
-    width: 100%;
-    margin-top: 14px;
-  }
-  .weight-range-tabs .range-button {
+  .range-tabs .range-button {
     flex: 1;
     min-width: 0;
   }
