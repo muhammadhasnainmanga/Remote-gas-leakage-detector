@@ -11,9 +11,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/css/dashboard.css?v=20261124-422fix" />
+    <link rel="stylesheet" href="/static/css/dashboard.css?v=20261124-ui2" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <script defer src="/static/js/dashboard.js?v=20261124-422fix"></script>
+    <script defer src="/static/js/dashboard.js?v=20261124-ui2"></script>
   </head>
   <body>
     <div class="app-shell">
@@ -145,8 +145,9 @@
                 </div>
               </div>
               <div class="chart-legend">
-                <span><i class="legend-dot"></i>Average raw reading</span
-                ><span id="sampleHint"></span>
+                <span><i class="legend-dot"></i>Average raw reading</span>
+                <span class="threshold-legend"><i class="threshold-legend-line"></i>Alert threshold</span>
+                <span id="sampleHint"></span>
               </div>
             </article>
             <article class="panel signal-panel">
@@ -195,11 +196,11 @@
           <article class="panel weight-panel">
             <div class="weight-heading">
               <div>
-                <p class="eyebrow">GAS REMAINING</p>
+                <p class="eyebrow">NET GAS LEFT</p>
                 <h2 id="weightRemaining">Waiting for load-cell data</h2>
               </div>
               <div class="weight-reading-controls">
-                <span id="weightFigure" class="weight-figure">Gross — kg</span>
+                <span class="weight-figure"><span class="weight-figure-label">GROSS</span><span id="weightFigure">— kg</span></span>
                 <div class="unit-toggle" role="group" aria-label="Weight unit">
                   <button class="unit-button active" type="button" data-weight-unit="kg" aria-pressed="true">kg</button>
                   <button class="unit-button" type="button" data-weight-unit="g" aria-pressed="false">g</button>

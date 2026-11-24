@@ -45,7 +45,7 @@ function setConnection(kind, text) {
 
 
 // function to render chart
-function renderChart(points, period) {
+function renderChart(points, period, threshold) {
   $('chartEmpty').hidden = points.length !== 0;
   if (!window.Chart) {
     $('chartEmpty').hidden = false;
@@ -59,16 +59,23 @@ function renderChart(points, period) {
       : date.toLocaleTimeString([], { timeZone: 'Asia/Karachi', hour: 'numeric', minute: '2-digit' });
   });
   const values = points.map((point) => point.average);
+  const thresholdValues = points.map(() => threshold);
   if (!chart) {
     chart = new Chart($('readingsChart'), {
       type: 'line',
-      data: { labels, datasets: [{ label: 'Average raw ADC', data: values, sampleCounts: points.map((point) => point.samples), borderColor: '#557895', backgroundColor: 'rgba(85,120,149,.10)', borderWidth: 2, fill: true, tension: .2, pointRadius: 0, pointHoverRadius: 4 }] },
+      data: { labels, datasets: [
+        { label: 'Average raw ADC', data: values, sampleCounts: points.map((point) => point.samples), borderColor: '#648b78', backgroundColor: 'rgba(100,139,120,.12)', borderWidth: 2, fill: true, tension: .2, pointRadius: 0, pointHoverRadius: 4 },
+        { label: 'Alert threshold', data: thresholdValues, borderColor: '#c27a61', borderWidth: 1.5, borderDash: [6, 5], fill: false, tension: 0, pointRadius: 0, pointHoverRadius: 0 },
+      ] },
       options: {
         responsive: true, maintainAspectRatio: false,
         interaction: { intersect: false, mode: 'index' },
         plugins: {
           legend: { display: false },
-          tooltip: { displayColors: false, callbacks: { afterLabel: (context) => `${context.dataset.sampleCounts?.[context.dataIndex] ?? 0} samples in interval` } },
+          tooltip: { displayColors: false, callbacks: {
+            label: (context) => `${context.dataset.label}: ${formatNumber(context.parsed.y)}`,
+            afterLabel: (context) => context.datasetIndex === 0 ? `${context.dataset.sampleCounts?.[context.dataIndex] ?? 0} samples in interval` : '',
+          } },
         },
         scales: {
           x: { grid: { display: false }, ticks: { color: '#8a949c', maxTicksLimit: 9, maxRotation: 0 } },
@@ -80,6 +87,7 @@ function renderChart(points, period) {
     chart.data.labels = labels;
     chart.data.datasets[0].data = values;
     chart.data.datasets[0].sampleCounts = points.map((point) => point.samples);
+    chart.data.datasets[1].data = thresholdValues;
     chart.update();
   }
 }
@@ -154,16 +162,16 @@ function renderData(data) {
   const cylinder = data.cylinder;
   $('weightAlertBanner').hidden = !cylinder.low_weight;
   setText('weightRemaining', cylinder.has_reading
-    ? cylinder.remaining_grams === null
-      ? 'Set empty cylinder weight to calculate gas remaining'
-      : `${displayWeight(cylinder.remaining_grams)} gas remaining`
+    ? cylinder.remaining_grams === null ? 'Add empty cylinder weight' : displayWeight(cylinder.remaining_grams)
     : 'Waiting for load-cell data');
   setText('weightFigure', cylinder.has_reading
-    ? `${displayWeight(cylinder.weight_grams)} gross`
-    : `Gross — ${weightUnit}`);
+    ? displayWeight(cylinder.weight_grams)
+    : `— ${weightUnit}`);
   setText('weightDetails', cylinder.empty_weight_grams === null
-    ? 'Enter the empty cylinder weight below to calculate gas remaining.'
-    : `Empty cylinder: ${displayWeight(cylinder.empty_weight_grams)}`);
+    ? 'Add the empty cylinder weight below to calculate gas remaining.'
+    : cylinder.has_reading
+      ? `${displayWeight(cylinder.weight_grams)} gross − ${displayWeight(cylinder.empty_weight_grams)} empty = ${displayWeight(cylinder.remaining_grams)} gas left.`
+      : `Empty cylinder: ${displayWeight(cylinder.empty_weight_grams)} · waiting for a load-cell reading.`);
   setText('weightLastTime', cylinder.recorded_at
     ? `Last reading: ${formatDate(cylinder.recorded_at)}`
     : 'Last reading: none yet');
@@ -172,7 +180,7 @@ function renderData(data) {
   }
   setText('weightRangeDescription', weightRangeDescriptions[data.weight_period]);
   renderWeightChart(cylinder.points, data.weight_period);
-  renderChart(sensor.points, data.period);
+  renderChart(sensor.points, data.period, data.threshold);
 }
 
 //getting all the last data, values, and all type of true and false

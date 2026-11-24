@@ -301,7 +301,16 @@ h2 {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #557895;
+  background: #648b78;
+}
+.threshold-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.threshold-legend-line {
+  width: 16px;
+  border-top: 2px dashed #c27a61;
 }
 .signal-panel {
   min-height: 240px;
@@ -512,7 +521,8 @@ h2 {
   margin-bottom: 14px;
 }
 .weight-heading h2 {
-  font-size: 19px;
+  font-size: 22px;
+  font-weight: 700;
 }
 .weight-reading-controls {
   display: flex;
@@ -560,10 +570,19 @@ h2 {
   outline-offset: 2px;
 }
 .weight-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
   color: #697780;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+.weight-figure-label {
+  color: #919ba3;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.65px;
 }
 .cylinder-track {
   height: 12px;
@@ -663,7 +682,7 @@ h2 {
     gap: 12px;
   }
   .weight-heading h2 {
-    font-size: 17px;
+    font-size: 19px;
   }
   .weight-reading-controls {
     align-items: flex-end;
@@ -687,6 +706,11 @@ h2 {
   .chart-wrap {
     height: 260px;
     margin-top: 15px;
+  }
+  .chart-legend {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px 14px;
   }
   .page-footer {
     flex-direction: column;
