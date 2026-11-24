@@ -24,11 +24,17 @@ function formatNumber(value) { return value === null || value === undefined ? '�
 
 function formatDate(value) { if (!value) return '—'; const date = new Date(value); return Number.isNaN(date.getTime()) ? '—' : dateFormat.format(date); }
 
+function setText(id, value) { const element = $(id); if (element) element.textContent = value; }
+
 function toDisplayWeight(grams) { return weightUnit === 'kg' ? grams / 1000 : grams; }
 
 function displayWeight(grams) { return `${formatNumber(toDisplayWeight(grams))} ${weightUnit}`; }
 
-function setConnection(kind, text) { $('connectionDot').className = `connection-dot ${kind}`; $('connectionText').textContent = text; }
+function setConnection(kind, text) {
+  const dot = $('connectionDot');
+  if (dot) dot.className = `connection-dot ${kind}`;
+  setText('connectionText', text);
+}
 
 
 // function to render chart
@@ -36,7 +42,7 @@ function renderChart(points, period) {
   $('chartEmpty').hidden = points.length !== 0;
   if (!window.Chart) {
     $('chartEmpty').hidden = false;
-    $('chartEmpty').textContent = 'The chart library did not load. Check your internet connection and retry.';
+    setText('chartEmpty', 'The chart library did not load. Check your internet connection and retry.');
     return;
   }
   const labels = points.map((point) => {
@@ -73,11 +79,11 @@ function renderChart(points, period) {
 
 
 function renderWeightChart(points, period) {
-  $('weightChartLegend').textContent = `Gross weight (${weightUnit})`;
+  setText('weightChartLegend', `Gross weight (${weightUnit})`);
   $('weightChartEmpty').hidden = points.length !== 0;
   if (!window.Chart) {
     $('weightChartEmpty').hidden = false;
-    $('weightChartEmpty').textContent = 'The chart library did not load. Check your internet connection and retry.';
+    setText('weightChartEmpty', 'The chart library did not load. Check your internet connection and retry.');
     return;
   }
   const labels = points.map((point) => {
@@ -118,46 +124,46 @@ function renderWeightChart(points, period) {
 function renderData(data) {
   const sensor = data.mq2;
   const hit = sensor.last_threshold_hit;
-  $('lastReading').textContent = formatNumber(sensor.latest_value);
-  $('lastReadingTime').textContent = sensor.latest_at ? `Recorded ${formatDate(sensor.latest_at)}` : 'No reading recorded yet';
-  $('average24h').textContent = formatNumber(sensor.average_24h);
-  $('emailsSent').textContent = formatNumber(data.emails.total);
-  $('thresholdValue').textContent = hit ? formatNumber(hit.value) : '—';
-  $('thresholdTime').textContent = hit ? `Recorded ${formatDate(hit.time)}` : 'No threshold hit recorded';
-  $('sensorStatus').textContent = sensor.status === 'alert' ? 'Threshold hit' : sensor.status === 'offline' ? 'No recent data' : 'Below threshold';
+  setText('lastReading', formatNumber(sensor.latest_value));
+  setText('lastReadingTime', sensor.latest_at ? `Recorded ${formatDate(sensor.latest_at)}` : 'No reading recorded yet');
+  setText('average24h', formatNumber(sensor.average_24h));
+  setText('emailsSent', formatNumber(data.emails.total));
+  setText('thresholdValue', hit ? formatNumber(hit.value) : '—');
+  setText('thresholdTime', hit ? `Recorded ${formatDate(hit.time)}` : 'No threshold hit recorded');
+  setText('sensorStatus', sensor.status === 'alert' ? 'Threshold hit' : sensor.status === 'offline' ? 'No recent data' : 'Below threshold');
   $('sensorStatus').className = `status-pill ${sensor.status}`;
   $('alertBanner').hidden = sensor.status !== 'alert';
   $('offlineBanner').hidden = sensor.status !== 'offline';
   const value = sensor.latest_value ?? 0;
-  $('meterValue').textContent = formatNumber(sensor.latest_value);
+  setText('meterValue', formatNumber(sensor.latest_value));
   $('meterFill').style.width = `${Math.min(100, Math.max(0, value / 65535 * 100))}%`;
   const threshold = data.threshold ?? 0;
   $('thresholdMarker').style.left = `${Math.min(100, Math.max(0, threshold / 65535 * 100))}%`;
-  $('thresholdLabel').textContent = `Threshold ${formatNumber(data.threshold)}`;
-  $('updatedAt').textContent = formatDate(data.generated_at);
-  $('rangeDescription').textContent = rangeDescriptions[data.period];
-  $('sampleHint').textContent = `${numberFormat.format(sensor.points.reduce((sum, point) => sum + point.samples, 0))} readings grouped`;
+  setText('thresholdLabel', `Threshold ${formatNumber(data.threshold)}`);
+  setText('updatedAt', formatDate(data.generated_at));
+  setText('rangeDescription', rangeDescriptions[data.period]);
+  setText('sampleHint', `${numberFormat.format(sensor.points.reduce((sum, point) => sum + point.samples, 0))} readings grouped`);
 
   const cylinder = data.cylinder;
   $('weightAlertBanner').hidden = !cylinder.low_weight;
-  $('weightRemaining').textContent = cylinder.has_reading
+  setText('weightRemaining', cylinder.has_reading
     ? cylinder.remaining_grams === null
       ? 'Set empty cylinder weight to calculate gas remaining'
       : `${displayWeight(cylinder.remaining_grams)} gas remaining`
-    : 'Waiting for load-cell data';
-  $('weightFigure').textContent = cylinder.has_reading
+    : 'Waiting for load-cell data');
+  setText('weightFigure', cylinder.has_reading
     ? `${displayWeight(cylinder.weight_grams)} gross`
-    : `Gross — ${weightUnit}`;
-  $('weightDetails').textContent = cylinder.empty_weight_grams === null
+    : `Gross — ${weightUnit}`);
+  setText('weightDetails', cylinder.empty_weight_grams === null
     ? 'Enter the empty cylinder weight below to calculate gas remaining.'
-    : `Empty cylinder: ${displayWeight(cylinder.empty_weight_grams)}`;
-  $('weightLastTime').textContent = cylinder.recorded_at
+    : `Empty cylinder: ${displayWeight(cylinder.empty_weight_grams)}`);
+  setText('weightLastTime', cylinder.recorded_at
     ? `Last reading: ${formatDate(cylinder.recorded_at)}`
-    : 'Last reading: none yet';
+    : 'Last reading: none yet');
   if (cylinder.empty_weight_grams !== null && document.activeElement !== $('emptyCylinderKg')) {
     $('emptyCylinderKg').value = (cylinder.empty_weight_grams / 1000).toFixed(3);
   }
-  $('weightRangeDescription').textContent = weightRangeDescriptions[data.weight_period];
+  setText('weightRangeDescription', weightRangeDescriptions[data.weight_period]);
   renderWeightChart(cylinder.points, data.weight_period);
   renderChart(sensor.points, data.period);
 }
@@ -177,7 +183,7 @@ async function fetchRecentData() {
     const deviceOffline = data.mq2.status === 'offline' && !data.cylinder.has_reading;
     setConnection(deviceOffline ? 'down' : 'live', deviceOffline ? 'No recent sensor data' : 'Connected');
   } catch (error) {
-    $('errorBanner').textContent = `Could not get recent data: ${error.message}`;
+    setText('errorBanner', `Could not get recent data: ${error.message}`);
     $('errorBanner').hidden = false;
     setConnection('down', 'Could not connect');
   } finally {

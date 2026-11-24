@@ -198,11 +198,13 @@
                 <p class="eyebrow">GAS REMAINING</p>
                 <h2 id="weightRemaining">Waiting for load-cell data</h2>
               </div>
-              <span id="weightFigure" class="weight-figure">Gross — kg</span>
-            </div>
-            <div class="unit-toggle" role="group" aria-label="Weight unit">
-              <button class="unit-button active" type="button" data-weight-unit="kg" aria-pressed="true">kg</button>
-              <button class="unit-button" type="button" data-weight-unit="g" aria-pressed="false">g</button>
+              <div class="weight-reading-controls">
+                <span id="weightFigure" class="weight-figure">Gross — kg</span>
+                <div class="unit-toggle" role="group" aria-label="Weight unit">
+                  <button class="unit-button active" type="button" data-weight-unit="kg" aria-pressed="true">kg</button>
+                  <button class="unit-button" type="button" data-weight-unit="g" aria-pressed="false">g</button>
+                </div>
+              </div>
             </div>
             <p id="weightDetails" class="small-note">No load-cell measurements are currently stored in Neon.</p>
             <p id="weightLastTime" class="small-note">Last reading: —</p>

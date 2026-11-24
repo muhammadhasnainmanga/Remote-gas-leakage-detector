@@ -410,12 +410,16 @@ h2 {
   color: #984d47;
 }
 .weight-panel {
-  max-width: 760px;
-  min-height: 220px;
+  width: 100%;
+  min-height: 0;
+  padding: 20px 22px;
 }
 .weight-content-grid {
-  margin-top: 13px;
+  margin-top: 14px;
   grid-template-columns: minmax(0, 1.8fr) minmax(250px, 0.8fr);
+}
+.weight-panel .small-note {
+  margin-top: 9px;
 }
 .settings-panel h2 {
   margin-bottom: 9px;
@@ -432,16 +436,21 @@ h2 {
 }
 .settings-input-row {
   display: flex;
+  align-items: stretch;
   gap: 8px;
 }
 .settings-input-row input {
   min-width: 0;
-  width: 100%;
+  flex: 1 1 0;
+  width: 0;
+  min-height: 42px;
   border: 1px solid #cbd3d9;
   border-radius: 6px;
-  padding: 8px 10px;
+  padding: 9px 12px;
   color: var(--ink);
   font: 500 12px "DM Sans", sans-serif;
+  background: #fff;
+  appearance: none;
 }
 .settings-input-row input:focus-visible {
   outline: 2px solid #7893a8;
@@ -499,16 +508,24 @@ h2 {
 .weight-heading {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 28px;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 14px;
 }
 .weight-heading h2 {
-  font-size: 20px;
+  font-size: 19px;
+}
+.weight-reading-controls {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding-top: 2px;
 }
 .unit-toggle {
   display: inline-flex;
+  flex: 0 0 auto;
   gap: 2px;
-  margin: 0 0 8px;
+  margin: 0;
   padding: 3px;
   border: 1px solid #e1e6e3;
   border-radius: 7px;
@@ -516,8 +533,10 @@ h2 {
 }
 .unit-button {
   border: 0;
+  appearance: none;
+  -webkit-appearance: none;
   min-width: 42px;
-  min-height: 31px;
+  min-height: 32px;
   border-radius: 5px;
   padding: 6px 10px;
   background: transparent;
@@ -542,8 +561,10 @@ h2 {
   outline-offset: 2px;
 }
 .weight-figure {
-  color: #87919a;
+  color: #697780;
   font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 .cylinder-track {
   height: 12px;
@@ -635,6 +656,26 @@ h2 {
   .weight-range-tabs .range-button {
     flex: 1;
     min-width: 0;
+  }
+  .weight-panel {
+    padding: 17px;
+  }
+  .weight-heading {
+    gap: 12px;
+  }
+  .weight-heading h2 {
+    font-size: 17px;
+  }
+  .weight-reading-controls {
+    align-items: flex-end;
+    flex-direction: column-reverse;
+    gap: 7px;
+  }
+  .settings-input-row {
+    gap: 7px;
+  }
+  .settings-input-row .refresh-button {
+    min-width: 78px;
   }
   .panel-heading.chart-heading {
     display: flex;
