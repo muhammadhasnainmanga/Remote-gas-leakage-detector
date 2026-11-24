@@ -30,7 +30,7 @@ function toDisplayWeight(grams) { return weightUnit === 'kg' ? grams / 1000 : gr
 
 function formatWeightNumber(value) {
   if (value === null || value === undefined) return '—';
-  const decimals = weightUnit === 'kg' ? 2 : 1;
+  const decimals = weightUnit === 'kg' ? 3 : 1;
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: decimals }).format(value);
 }
 
