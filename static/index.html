@@ -11,9 +11,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/css/dashboard.css?v=20261124-consistent-ui" />
+    <link rel="stylesheet" href="/static/css/dashboard.css?v=20261125-cylinder-alerts" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <script defer src="/static/js/dashboard.js?v=20261124-consistent-ui"></script>
+    <script defer src="/static/js/dashboard.js?v=20261125-cylinder-alerts"></script>
   </head>
   <body>
     <div class="app-shell">
@@ -54,7 +54,7 @@
             </div>
           </section>
           <section id="alertBanner" class="alert-banner" hidden role="status">
-            <strong>Reading is at or above the demo threshold.</strong
+            <strong>10 consecutive MQ-2 readings are at or above the alert threshold.</strong
             ><span>This is not calibrated as an LPG alarm.</span>
           </section>
           <section
@@ -186,29 +186,40 @@
             <div>
               <p class="eyebrow">LOAD CELL</p>
               <h1>Cylinder weight</h1>
-              <p class="subheading">Gross cylinder weight and estimated gas remaining</p>
+              <p class="subheading">Estimated gas remaining in the cylinder</p>
             </div>
           </section>
           <section id="weightAlertBanner" class="alert-banner" hidden role="status">
-            <strong>Gas remaining is below 0.5 kg.</strong>
-            <span>A low-weight email alert is sent when the cylinder crosses this level.</span>
+            <strong>Gas remaining is below 1 kg.</strong>
+            <span>A cylinder email alert is queued when the level crosses this threshold.</span>
           </section>
           <article class="panel weight-panel">
             <div class="weight-heading">
               <div>
-                <p class="eyebrow">NET GAS LEFT</p>
+                <p class="eyebrow">ESTIMATED GAS LEFT</p>
                 <h2 id="weightRemaining">Waiting for load-cell data</h2>
               </div>
               <div class="weight-reading-controls">
-                <span class="weight-figure"><span class="weight-figure-label">GROSS</span><span id="weightFigure">— kg</span></span>
+                <span class="weight-figure"><span class="weight-figure-label">LAST CHECKED</span><span id="weightLastValue">— kg</span></span>
                 <div class="unit-toggle" role="group" aria-label="Weight unit">
                   <button class="unit-button active" type="button" data-weight-unit="kg" aria-pressed="true">kg</button>
                   <button class="unit-button" type="button" data-weight-unit="g" aria-pressed="false">g</button>
                 </div>
               </div>
             </div>
-            <p id="weightDetails" class="small-note">No load-cell measurements are currently stored in Neon.</p>
-            <p id="weightLastTime" class="small-note">Last reading: —</p>
+            <div class="gas-bar-block" aria-label="Gas remaining from zero to 10 kilograms">
+              <div class="gas-bar-heading"><span>CYLINDER LEVEL</span><strong id="gasPercent">—</strong></div>
+              <div class="cylinder-track" role="meter" aria-label="Estimated gas remaining" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+                <div id="cylinderFill" class="cylinder-fill"></div>
+                <span id="gasThresholdMarker" class="gas-threshold-marker" aria-label="1 kilogram email threshold"></span>
+              </div>
+              <div class="gas-bar-scale"><span>0 kg</span><span>1 kg alert</span><span>10 kg max</span></div>
+            </div>
+            <div class="weight-meta-row">
+              <p id="weightLastTime" class="small-note">Last checked: —</p>
+              <p class="small-note">Cylinder emails sent: <strong id="cylinderEmailsSent">0</strong></p>
+            </div>
+            <p id="cylinderLastEmail" class="small-note">Last cylinder email: none</p>
           </article>
           <section class="content-grid weight-content-grid">
             <article class="panel chart-panel">
@@ -228,16 +239,16 @@
                 <canvas id="weightChart" aria-label="Cylinder weight graph"></canvas>
                 <div id="weightChartEmpty" class="chart-empty" hidden>No load-cell readings for this period.</div>
               </div>
-              <div class="chart-legend"><span><i class="legend-dot weight-legend-dot"></i><span id="weightChartLegend">Gross weight (kg)</span></span></div>
+              <div class="chart-legend"><span><i class="legend-dot weight-legend-dot"></i><span id="weightChartLegend">Gas remaining (kg)</span></span></div>
             </article>
             <article class="panel settings-panel">
               <p class="eyebrow">CYLINDER SETUP</p>
               <h2>Empty cylinder weight</h2>
-              <p class="small-note">Enter the cylinder's gross weight when empty. The dashboard subtracts this from the latest reading to estimate gas remaining.</p>
+              <p class="small-note">Enter the empty cylinder weight. If unknown, 0 kg is used until you set it.</p>
               <form id="cylinderSettingsForm" class="settings-form">
                 <label for="emptyCylinderKg">Empty weight (kg)</label>
                 <div class="settings-input-row">
-                  <input id="emptyCylinderKg" name="empty_weight_kg" type="number" min="0.001" max="100" step="0.001" required placeholder="e.g. 12.5" />
+                  <input id="emptyCylinderKg" name="empty_weight_kg" type="number" min="0" max="100" step="0.01" required value="0" placeholder="e.g. 12.5" />
                   <button id="saveCylinderSettings" class="refresh-button" type="submit">Save</button>
                 </div>
                 <p id="settingsMessage" class="small-note" role="status"></p>

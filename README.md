@@ -1,32 +1,37 @@
-# MQ-2 dashboard and readings API
+# SafeKitchen monitor
 
-The FastAPI service accepts Pico W samples, stores them in Neon, sends threshold reminder emails, and serves the dashboard at `/` from the same Azure App Service.
+The Pico W sends MQ-2 and HX711 readings to a FastAPI service on Azure App Service. The API stores readings in Neon Postgres, records alert emails in a durable outbox, and serves the dashboard.
 
-## Dashboard
+## Current demo behavior
 
-The dashboard has separate Leakage and Weight views. The Weight view shows gross weight, estimated gas remaining after subtracting the saved empty-cylinder weight, the last reading time, and hourly/daily/weekly weight graphs. A kg/g toggle changes website display only; Neon always stores the measured weight in grams. You can enter the empty cylinder's gross weight in kg on the page. The page refreshes dashboard data once per minute and also has a manual refresh button.
+- MQ-2 is sampled and uploaded continuously by `Project2-source/newMQ2.py`; there is no fixed upload interval. An email is queued after **10 consecutive readings at or above raw ADC threshold 17000**. One alert is sent per high streak; a below-threshold reading rearms it. The raw threshold is not calibrated LPG ppm.
+- Load-cell weight is averaged from five HX711 samples, rounded to the nearest 10 grams, and uploaded every **15 seconds**. Database values remain grams; the dashboard displays kilograms by default.
+- Estimated gas is `max(gross_weight - empty_cylinder_weight, 0)`. If empty-cylinder tare is unset, it defaults to 0. The dashboard shows a 10 kg scale, a 1 kg email threshold, last checked value/time, and cylinder-email count/last-send time. The graph plots estimated gas remaining.
+- Low-gas email triggers when estimated gas falls below **1 kg**. It rearms only after weight rises to at least **1.2 kg**, which prevents noisy repeated emails around the threshold.
+- Pico assigns each reading a boot ID, sequence number, and (when NTP is available) device timestamp. The API also stores its own receive timestamp and deduplicates retries by device/boot/sequence.
+- If the network is down, the Pico keeps a bounded FIFO of 200 readings in `offline_readings.jsonl` and retries them after reconnecting. The timer callback only flags that a weight sample is due; all HX711, file, HTTP, and email operations run outside interrupt callbacks.
+- Email sends happen from a database-backed outbox worker, outside the reading request. Failed sends are retried with increasing delays; the dashboard counts successful sends.
 
-The hourly graph shows the last hour in 1-minute averages, daily uses 5-minute averages, and weekly uses hourly averages. At the current rate of about 11 readings per minute, the hourly graph represents about 660 readings. The API groups readings in Neon before sending them to the browser and the chart tooltip shows the actual sample count for each interval.
+## Neon setup
 
-The dashboard data endpoint is `GET /api/dashboard?period=hourly|daily|weekly`. It is read-only and public. Database credentials and the Pico token are only used by the backend.
+Run [`loadcell_schema.sql`](loadcell_schema.sql) in the Neon SQL editor before deployment. The API also creates and upgrades its operational tables on startup. The existing `mq2_readings` table must contain `value`, `device_id`, and `recorded_at` columns.
 
-## Device endpoints
+Empty-cylinder tare is configuration, separate from measurement history. It is stored server-side so the website and the email threshold use the same value. The website allows 0 kg until the tare is entered.
 
-- `POST /api/readings` body: `{"value": 12345, "device_id": "pico-mq2-1"}`
-- `POST /api/load-cell` body: `{"weight_grams": 12500, "device_id": "pico-mq2-1"}`
+## App settings
 
-Both device endpoints require `Authorization: Bearer <DEVICE_TOKEN>`. Pico sends MQ-2 readings every five seconds and load-cell readings immediately at startup, then once per minute. The low-weight alert is based on estimated gas remaining (gross reading minus empty-cylinder weight); an email is sent when it crosses below 0.5 kg.
+Use the names in [`.env.example`](.env.example) as Azure App Service application settings. Never commit actual credentials. Required values include `DATABASE_URL`, `DEVICE_TOKEN`, SMTP settings, and alert sender/recipient addresses. `LPG_RAW_THRESHOLD` defaults to 17000.
 
-The firmware uses the calibrated HX711 settings from `Project2-source/blink.py`: DT/DOUT to Pico GP16, SCK/CLK to GP17, calibration factor 201.75, polarity -1, and 20 samples for startup tare. Each minute it saves one live, unsmoothed HX711 reading in grams. Leave the scale empty while the Pico starts.
+## Pico setup
 
-## Neon tables and cylinder setup
+Copy `Project2-source/device_secrets.example.py` to `Project2-source/device_secrets.py`, fill in Wi-Fi, API URL, and the **new** device token, then copy `main.py`, `newMQ2.py`, and `device_secrets.py` to the Pico W. `main.py` attempts NTP clock synchronization; if that fails, server receive timestamps remain available.
 
-`mq2_readings` is the existing sensor table. On startup, the API creates `mq2_email_alerts` and `loadcell_email_alerts`. Run the SQL in [`loadcell_schema.sql`](loadcell_schema.sql) once in Neon before deploying the updated API. It creates the reading history, empty-cylinder setting, and low-weight email log tables.
+The Pico timer is used only to set a flag every 15 seconds. Sampling the HX711 and making HTTP requests happen in the regular main loop, never in the interrupt callback.
 
-The API stores load-cell samples as grams in `loadcell_reading`. The weight graph plots each saved measurement directly without averaging or smoothing. Empty-cylinder gross weight is saved from the Weight page in `cylinder_settings`; the estimated gas is `max(gross_weight - empty_weight, 0)`. Low-weight emails are sent when remaining gas first falls below 500 grams, and will send again only after the weight rises above the threshold and falls below it again. Configure the existing `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, and `SMTP_PASSWORD` App Service settings for email delivery.
+## API endpoints
 
-The configured MQ-2 threshold is a temporary raw ADC demo value, not calibrated LPG ppm. Calibrate before presenting it as an LPG detection level.
-
-## Local run
-
-Install `requirements.txt`, then run `python -m uvicorn app:app --host 0.0.0.0 --port 8000`. The Neon table `mq2_readings` must already exist.
+- `POST /api/readings`: continuous MQ-2 readings. Payload includes `value`, `device_id`, `boot_id`, `sequence`, and optional `device_time`.
+- `POST /api/load-cell`: load-cell readings every 15 seconds, in grams, with the same deduplication/timestamp fields.
+- `GET /api/dashboard?period=hourly|daily|weekly&weight_period=hourly|daily|weekly`
+- `GET/PUT /api/cylinder-settings`: read/update empty-cylinder tare in grams.
+- `GET /health`: API health.

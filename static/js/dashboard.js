@@ -7,14 +7,14 @@ let weightUnit = 'kg';
 let lastDashboardData = null;
 
 const rangeDescriptions = {
-  hourly: 'Last hour · 1-minute averages (about 660 readings at 11 per minute)',
+  hourly: 'Last hour · 1-minute averages',
   daily: 'Last 24 hours · 5-minute averages',
   weekly: 'Last 7 days · hourly averages',
 };
 const weightRangeDescriptions = {
-  hourly: 'Last hour · individual readings',
-  daily: 'Last 24 hours · individual readings',
-  weekly: 'Last 7 days · individual readings',
+  hourly: 'Last hour · 15-second readings',
+  daily: 'Last 24 hours · 5-minute averages',
+  weekly: 'Last 7 days · hourly averages',
 };
 const validPeriods = new Set(['hourly', 'daily', 'weekly']);
 
@@ -31,7 +31,7 @@ function toDisplayWeight(grams) { return weightUnit === 'kg' ? grams / 1000 : gr
 
 function formatWeightNumber(value) {
   if (value === null || value === undefined) return '—';
-  const decimals = weightUnit === 'kg' ? 3 : 1;
+  const decimals = weightUnit === 'kg' ? 2 : 0;
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: decimals }).format(value);
 }
 
@@ -94,7 +94,7 @@ function renderChart(points, period, threshold) {
 
 
 function renderWeightChart(points, period) {
-  setText('weightChartLegend', `Gross weight (${weightUnit})`);
+  setText('weightChartLegend', `Gas remaining (${weightUnit})`);
   $('weightChartEmpty').hidden = points.length !== 0;
   if (!window.Chart) {
     $('weightChartEmpty').hidden = false;
@@ -111,7 +111,7 @@ function renderWeightChart(points, period) {
   if (!weightChart) {
     weightChart = new Chart($('weightChart'), {
       type: 'line',
-      data: { labels, datasets: [{ label: `Gross weight (${weightUnit})`, data: values, borderColor: '#648b78', backgroundColor: 'rgba(100,139,120,.12)', borderWidth: 2, fill: true, tension: 0, pointRadius: 2, pointHoverRadius: 4 }] },
+      data: { labels, datasets: [{ label: `Gas remaining (${weightUnit})`, data: values, borderColor: '#648b78', backgroundColor: 'rgba(100,139,120,.12)', borderWidth: 2, fill: true, tension: 0, pointRadius: 2, pointHoverRadius: 4 }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         interaction: { intersect: false, mode: 'index' },
@@ -121,15 +121,16 @@ function renderWeightChart(points, period) {
         },
         scales: {
           x: { grid: { display: false }, ticks: { color: '#8a949c', maxTicksLimit: 9, maxRotation: 0 } },
-          y: { beginAtZero: false, title: { display: true, text: `Gross weight (${weightUnit})` }, grid: { color: '#edf0f1' }, ticks: { color: '#8a949c', maxTicksLimit: 5, callback: (value) => formatWeightNumber(value) } },
+          y: { beginAtZero: true, max: weightUnit === 'kg' ? 10 : 10000, title: { display: true, text: `Gas remaining (${weightUnit})` }, grid: { color: '#edf0f1' }, ticks: { color: '#8a949c', maxTicksLimit: 5, callback: (value) => formatWeightNumber(value) } },
         },
       },
     });
   } else {
     weightChart.data.labels = labels;
     weightChart.data.datasets[0].data = values;
-    weightChart.data.datasets[0].label = `Gross weight (${weightUnit})`;
-    weightChart.options.scales.y.title.text = `Gross weight (${weightUnit})`;
+    weightChart.data.datasets[0].label = `Gas remaining (${weightUnit})`;
+    weightChart.options.scales.y.title.text = `Gas remaining (${weightUnit})`;
+    weightChart.options.scales.y.max = weightUnit === 'kg' ? 10 : 10000;
     weightChart.update();
   }
 }
@@ -142,10 +143,10 @@ function renderData(data) {
   setText('lastReading', formatNumber(sensor.latest_value));
   setText('lastReadingTime', sensor.latest_at ? `Recorded ${formatDate(sensor.latest_at)}` : 'No reading recorded yet');
   setText('average24h', formatNumber(sensor.average_24h));
-  setText('emailsSent', formatNumber(data.emails.total));
+  setText('emailsSent', formatNumber(data.emails.mq2.total));
   setText('thresholdValue', hit ? formatNumber(hit.value) : '—');
   setText('thresholdTime', hit ? `Recorded ${formatDate(hit.time)}` : 'No threshold hit recorded');
-  setText('sensorStatus', sensor.status === 'alert' ? 'Threshold hit' : sensor.status === 'offline' ? 'No recent data' : 'Below threshold');
+  setText('sensorStatus', sensor.status === 'alert' ? 'Alert active' : sensor.status === 'watch' ? `Checking ${sensor.high_streak}/10` : sensor.status === 'offline' ? 'No recent data' : 'Below threshold');
   $('sensorStatus').className = `status-pill ${sensor.status}`;
   $('alertBanner').hidden = sensor.status !== 'alert';
   $('offlineBanner').hidden = sensor.status !== 'offline';
@@ -155,7 +156,7 @@ function renderData(data) {
   $('meterFill').style.width = `${Math.min(100, Math.max(0, value / 65535 * 100))}%`;
   const threshold = data.threshold ?? 0;
   $('thresholdMarker').style.left = `${Math.min(100, Math.max(0, threshold / 65535 * 100))}%`;
-  setText('thresholdLabel', `Threshold ${formatNumber(data.threshold)}`);
+  setText('thresholdLabel', `Threshold ${formatNumber(data.threshold)} · 10 readings`);
   setText('updatedAt', formatDate(data.generated_at));
   setText('rangeDescription', rangeDescriptions[data.period]);
   setText('sampleHint', `${numberFormat.format(sensor.points.reduce((sum, point) => sum + point.samples, 0))} readings grouped`);
@@ -163,22 +164,31 @@ function renderData(data) {
   const cylinder = data.cylinder;
   $('weightAlertBanner').hidden = !cylinder.low_weight;
   setText('weightRemaining', cylinder.has_reading
-    ? cylinder.remaining_grams === null ? 'Add empty cylinder weight' : displayWeight(cylinder.remaining_grams)
+    ? displayWeight(cylinder.remaining_grams)
     : 'Waiting for load-cell data');
-  setText('weightFigure', cylinder.has_reading
-    ? displayWeight(cylinder.weight_grams)
+  setText('weightLastValue', cylinder.has_reading
+    ? displayWeight(cylinder.remaining_grams)
     : `— ${weightUnit}`);
-  setText('weightDetails', cylinder.empty_weight_grams === null
-    ? 'Add the empty cylinder weight below to calculate gas remaining.'
-    : cylinder.has_reading
-      ? `${displayWeight(cylinder.weight_grams)} gross − ${displayWeight(cylinder.empty_weight_grams)} empty = ${displayWeight(cylinder.remaining_grams)} gas left.`
-      : `Empty cylinder: ${displayWeight(cylinder.empty_weight_grams)} · waiting for a load-cell reading.`);
   setText('weightLastTime', cylinder.recorded_at
-    ? `Last reading: ${formatDate(cylinder.recorded_at)}`
-    : 'Last reading: none yet');
-  if (cylinder.empty_weight_grams !== null && document.activeElement !== $('emptyCylinderKg')) {
-    $('emptyCylinderKg').value = (cylinder.empty_weight_grams / 1000).toFixed(3);
+    ? `Last checked ${formatDate(cylinder.recorded_at)}`
+    : 'Last checked: no reading yet');
+  setText('cylinderEmailsSent', formatNumber(cylinder.emails.total));
+  setText('cylinderLastEmail', cylinder.emails.last_sent_at
+    ? `Last cylinder email: ${formatDate(cylinder.emails.last_sent_at)}`
+    : 'Last cylinder email: none yet');
+  if (document.activeElement !== $('emptyCylinderKg')) {
+    $('emptyCylinderKg').value = (cylinder.empty_weight_grams / 1000).toFixed(2);
   }
+  const capacityKg = cylinder.capacity_grams / 1000;
+  const remainingKg = cylinder.has_reading ? cylinder.remaining_grams / 1000 : 0;
+  const fillPercent = Math.min(100, Math.max(0, remainingKg / capacityKg * 100));
+  $('cylinderFill').style.width = `${fillPercent}%`;
+  $('cylinderFill').classList.toggle('low', cylinder.low_weight);
+  setText('gasPercent', cylinder.has_reading ? `${Math.round(fillPercent)}%` : '—');
+  const gasMeter = document.querySelector('.cylinder-track[role="meter"]');
+  gasMeter.setAttribute('aria-valuemax', String(capacityKg));
+  gasMeter.setAttribute('aria-valuenow', String(Math.min(capacityKg, remainingKg)));
+  $('gasThresholdMarker').style.left = `${cylinder.low_threshold_grams / cylinder.capacity_grams * 100}%`;
   setText('weightRangeDescription', weightRangeDescriptions[data.weight_period]);
   renderWeightChart(cylinder.points, data.weight_period);
   renderChart(sensor.points, data.period, data.threshold);
@@ -281,4 +291,4 @@ document.querySelectorAll('.unit-button').forEach((button) => button.addEventLis
 
 $('refreshButton').addEventListener('click', fetchRecentData);
 fetchRecentData();
-setInterval(fetchRecentData, 60000);
+setInterval(fetchRecentData, 15000);

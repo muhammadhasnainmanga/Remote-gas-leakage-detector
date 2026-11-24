@@ -335,6 +335,10 @@ h2 {
   color: #36715a;
   background: #edf4f0;
 }
+.status-pill.watch {
+  color: #8a6b31;
+  background: #f7f3e9;
+}
 .status-pill.offline {
   color: #8c7138;
   background: #f7f3e9;
@@ -565,10 +569,64 @@ h2 {
   letter-spacing: 0.65px;
 }
 .cylinder-track {
+  position: relative;
   height: 12px;
 }
 .cylinder-fill {
   background: #648b78;
+}
+.cylinder-fill.low {
+  background: #c27a61;
+}
+.gas-bar-block {
+  margin-top: 20px;
+}
+.gas-bar-heading,
+.gas-bar-scale,
+.weight-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.gas-bar-heading {
+  margin-bottom: 8px;
+  color: #87919a;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+}
+.gas-bar-heading strong {
+  color: #52745f;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+.gas-bar-scale {
+  margin-top: 7px;
+  color: #919ba3;
+  font-size: 9px;
+}
+.gas-bar-scale span:nth-child(2) {
+  color: #a65c4c;
+}
+.gas-threshold-marker {
+  position: absolute;
+  z-index: 1;
+  top: -4px;
+  left: 10%;
+  height: 20px;
+  border-left: 2px dashed #b95d53;
+  transform: translateX(-1px);
+}
+.weight-meta-row {
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 9px;
+}
+.weight-meta-row .small-note {
+  margin-top: 0;
+}
+.weight-meta-row strong {
+  color: #344c3e;
 }
 .page-footer {
   display: flex;

@@ -1,32 +1,25 @@
-"""SMTP helper for MQ-2 threshold alerts."""
+"""SMTP delivery helpers. Credentials and recipients come from app settings."""
 
 import os
 import smtplib
 from email.message import EmailMessage
 
-# Put the visible email addresses here.
-EMAIL_FROM = "muhammadhasnainmanga@gmail.com"
-EMAIL_TO = "muhammadhasnainmanga@gmail.com, ishikaadvani16@gmail.com"
 
-
-def send_lpg_alert(value: int, device_id: str, threshold: int) -> None:
-    """Send one plain-text alert email; raises an exception if SMTP fails."""
+def _send(subject: str, body: str) -> None:
     host = os.environ["SMTP_HOST"]
     port = int(os.getenv("SMTP_PORT", "587"))
     username = os.environ["SMTP_USERNAME"]
     password = os.environ["SMTP_PASSWORD"]
+    sender = os.environ["ALERT_EMAIL_FROM"]
+    recipients = [item.strip() for item in os.environ["ALERT_EMAIL_TO"].split(",") if item.strip()]
+    if not recipients:
+        raise ValueError("ALERT_EMAIL_TO has no recipients")
 
     message = EmailMessage()
-    message["Subject"] = "Alert !! MQ-2 reading crossed the configured threshold"
-    message["From"] = EMAIL_FROM
-    message["To"] = EMAIL_TO
-    message.set_content(
-        "An MQ-2 raw reading reached or exceeded the configured threshold.\n\n"
-        f"Device: {device_id}\n"
-        f"Raw ADC reading: {value}\n"
-        f"Configured raw threshold: {threshold}\n\n"
-        "This is a raw sensor reading, not a calibrated LPG concentration in ppm."
-    )
+    message["Subject"] = subject
+    message["From"] = sender
+    message["To"] = ", ".join(recipients)
+    message.set_content(body)
 
     if port == 465:
         with smtplib.SMTP_SSL(host, port, timeout=15) as smtp:
@@ -41,34 +34,27 @@ def send_lpg_alert(value: int, device_id: str, threshold: int) -> None:
             smtp.send_message(message)
 
 
-def send_low_weight_alert(weight_grams: float, empty_weight_grams: float,
-                          remaining_grams: float, device_id: str) -> None:
-    """Send an alert when estimated gas remaining falls below 500 grams."""
-    host = os.environ["SMTP_HOST"]
-    port = int(os.getenv("SMTP_PORT", "587"))
-    username = os.environ["SMTP_USERNAME"]
-    password = os.environ["SMTP_PASSWORD"]
-
-    message = EmailMessage()
-    message["Subject"] = "SafeKitchen alert: cylinder gas is low"
-    message["From"] = EMAIL_FROM
-    message["To"] = EMAIL_TO
-    message.set_content(
-        "Estimated cylinder gas has fallen below 0.5 kg.\n\n"
-        f"Device: {device_id}\n"
-        f"Gross cylinder weight: {weight_grams / 1000:.3f} kg\n"
-        f"Configured empty-cylinder weight: {empty_weight_grams / 1000:.3f} kg\n"
-        f"Estimated gas remaining: {remaining_grams / 1000:.3f} kg\n"
+def send_mq2_alert(data: dict) -> None:
+    """Send the gas alert after the configured consecutive high samples."""
+    _send(
+        "SafeKitchen alert: possible gas detected",
+        "The MQ-2 reading stayed above the configured raw threshold for "
+        f"{data['consecutive_samples']} consecutive readings.\n\n"
+        f"Device: {data['device_id']}\n"
+        f"Raw ADC reading: {data['value']}\n"
+        f"Configured raw threshold: {data['threshold']}\n"
+        f"Reading time: {data['recorded_at']}\n\n"
+        "This prototype reports raw sensor values, not calibrated LPG ppm.",
     )
 
-    if port == 465:
-        with smtplib.SMTP_SSL(host, port, timeout=15) as smtp:
-            smtp.login(username, password)
-            smtp.send_message(message)
-    else:
-        with smtplib.SMTP(host, port, timeout=15) as smtp:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
-            smtp.login(username, password)
-            smtp.send_message(message)
+
+def send_cylinder_alert(data: dict) -> None:
+    """Send a warning when estimated gas remaining falls below 1 kg."""
+    _send(
+        "SafeKitchen alert: cylinder gas below 1 kg",
+        "Estimated gas remaining in the cylinder is below 1 kg.\n\n"
+        f"Device: {data['device_id']}\n"
+        f"Estimated gas remaining: {data['remaining_grams'] / 1000:.2f} kg\n"
+        f"Low-gas threshold: {data['threshold_grams'] / 1000:.2f} kg\n"
+        f"Reading time: {data['recorded_at']}\n",
+    )
