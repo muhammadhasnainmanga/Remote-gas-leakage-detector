@@ -449,42 +449,52 @@ h2 {
 }
 .settings-input-row .refresh-button {
   margin: 0;
-  min-width: 76px;
-  border-color: #4f7962;
-  border-radius: 8px;
-  background: #4f7962;
+  min-width: 92px;
+  min-height: 42px;
+  border-color: #52745f;
+  border-radius: 7px;
+  background: #52745f;
   color: #fff;
   font-size: 12px;
+  font-weight: 700;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
 }
 .settings-input-row .refresh-button:hover:not(:disabled) {
-  background: #3f6651;
+  border-color: #3f604c;
+  background: #3f604c;
+  transform: translateY(-1px);
 }
 .weight-legend-dot {
   background: #648b78;
 }
 .weight-range-tabs {
-  gap: 4px;
-  padding: 4px;
-  border-color: #dce7e0;
-  border-radius: 9px;
-  background: #f3f7f4;
+  flex: 0 0 auto;
+  gap: 3px;
+  padding: 3px;
+  border-color: #e1e6e3;
+  border-radius: 8px;
+  background: #f5f7f6;
 }
 .weight-range-tabs .range-button {
-  min-width: 64px;
-  min-height: 35px;
-  padding: 8px 12px;
+  min-width: 68px;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid transparent;
   border-radius: 6px;
-  color: #63736a;
+  color: #68756d;
   font-size: 11px;
+  font-weight: 650;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
 }
 .weight-range-tabs .range-button:hover:not(.active) {
-  background: #e8f0eb;
-  color: #355b47;
+  background: #e9eeeb;
+  color: #344c3e;
 }
 .weight-range-tabs .range-button.active {
-  background: #4f7962;
-  color: #fff;
-  box-shadow: 0 2px 5px #274b3730;
+  border-color: #e1e7e3;
+  background: #fff;
+  color: #31533f;
+  box-shadow: 0 1px 3px #1e332512;
 }
 .weight-heading {
   display: flex;
@@ -497,36 +507,38 @@ h2 {
 }
 .unit-toggle {
   display: inline-flex;
-  gap: 4px;
+  gap: 2px;
   margin: 0 0 8px;
-  padding: 4px;
-  border: 1px solid #dce7e0;
-  border-radius: 9px;
-  background: #f3f7f4;
+  padding: 3px;
+  border: 1px solid #e1e6e3;
+  border-radius: 7px;
+  background: #f5f7f6;
 }
 .unit-button {
   border: 0;
-  min-width: 48px;
-  min-height: 34px;
-  border-radius: 6px;
-  padding: 7px 12px;
+  min-width: 42px;
+  min-height: 31px;
+  border-radius: 5px;
+  padding: 6px 10px;
   background: transparent;
-  color: #63736a;
-  font: 700 11px "DM Sans", sans-serif;
+  color: #68756d;
+  font: 650 11px "DM Sans", sans-serif;
   cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
 }
 .unit-button.active {
-  background: #4f7962;
-  color: #fff;
-  box-shadow: 0 2px 5px #274b3730;
+  background: #fff;
+  color: #31533f;
+  box-shadow: 0 1px 3px #1e332512;
 }
 .unit-button:hover:not(.active) {
-  background: #e8f0eb;
-  color: #355b47;
+  background: #e9eeeb;
+  color: #344c3e;
 }
 .weight-range-tabs .range-button:focus-visible,
-.unit-button:focus-visible {
-  outline: 2px solid #4f7962;
+.unit-button:focus-visible,
+.settings-input-row .refresh-button:focus-visible {
+  outline: 2px solid #63816d;
   outline-offset: 2px;
 }
 .weight-figure {
@@ -615,6 +627,19 @@ h2 {
   .range-tabs {
     width: max-content;
     margin-top: 13px;
+  }
+  .weight-range-tabs {
+    width: 100%;
+    margin-top: 14px;
+  }
+  .weight-range-tabs .range-button {
+    flex: 1;
+    min-width: 0;
+  }
+  .panel-heading.chart-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
   .chart-panel {
     min-height: 390px;
