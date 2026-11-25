@@ -1,5 +1,3 @@
-"""API and dashboard for the SafeKitchen Pico W prototype."""
-
 import asyncio
 import os
 from datetime import datetime, timedelta, timezone
