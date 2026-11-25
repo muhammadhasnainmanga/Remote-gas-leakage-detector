@@ -12,9 +12,9 @@ const rangeDescriptions = {
   weekly: 'Last 7 days · hourly averages',
 };
 const weightRangeDescriptions = {
-  hourly: 'Last hour · 15-second readings',
-  daily: 'Last 24 hours · 5-minute averages',
-  weekly: 'Last 7 days · hourly averages',
+  hourly: 'Last hour · original readings',
+  daily: 'Last 24 hours · original readings',
+  weekly: 'Last 7 days · original readings',
 };
 const validPeriods = new Set(['hourly', 'daily', 'weekly']);
 
@@ -101,32 +101,38 @@ function renderWeightChart(points, period) {
     setText('weightChartEmpty', 'The chart library did not load. Check your internet connection and retry.');
     return;
   }
-  const labels = points.map((point) => {
-    const date = new Date(point.time);
-    return period === 'weekly'
-      ? date.toLocaleString([], { timeZone: 'Asia/Karachi', month: 'short', day: 'numeric', hour: 'numeric' })
-      : date.toLocaleTimeString([], { timeZone: 'Asia/Karachi', hour: 'numeric', minute: '2-digit' });
-  });
-  const values = points.map((point) => toDisplayWeight(point.weight_grams));
+  const values = points.map((point) => ({
+    x: Date.parse(point.time),
+    y: toDisplayWeight(point.weight_grams),
+  }));
   if (!weightChart) {
     weightChart = new Chart($('weightChart'), {
       type: 'line',
-      data: { labels, datasets: [{ label: `Gas remaining (${weightUnit})`, data: values, borderColor: '#648b78', backgroundColor: 'rgba(100,139,120,.12)', borderWidth: 2, fill: true, tension: 0, pointRadius: 2, pointHoverRadius: 4 }] },
+      data: { datasets: [{ label: `Gas remaining (${weightUnit})`, data: values, borderColor: '#648b78', backgroundColor: 'rgba(100,139,120,.12)', borderWidth: 2, fill: true, tension: 0, pointRadius: 0, pointHoverRadius: 4 }] },
       options: {
         responsive: true, maintainAspectRatio: false,
-        interaction: { intersect: false, mode: 'index' },
+        parsing: false,
+        interaction: { intersect: false, mode: 'nearest' },
         plugins: {
           legend: { display: false },
-          tooltip: { displayColors: false, callbacks: { label: (context) => `${formatWeightNumber(context.parsed.y)} ${weightUnit}` } },
+          decimation: { enabled: true, algorithm: 'min-max', threshold: 1000 },
+          tooltip: { displayColors: false, callbacks: {
+            title: (items) => items.length ? formatDate(new Date(items[0].parsed.x).toISOString()) : '',
+            label: (context) => `${formatWeightNumber(context.parsed.y)} ${weightUnit}`,
+          } },
         },
         scales: {
-          x: { grid: { display: false }, ticks: { color: '#8a949c', maxTicksLimit: 9, maxRotation: 0 } },
+          x: { type: 'linear', grid: { display: false }, ticks: { color: '#8a949c', maxTicksLimit: 8, maxRotation: 0, callback: (value) => {
+            const date = new Date(value);
+            return currentWeightPeriod === 'weekly'
+              ? date.toLocaleString([], { timeZone: 'Asia/Karachi', month: 'short', day: 'numeric' })
+              : date.toLocaleTimeString([], { timeZone: 'Asia/Karachi', hour: 'numeric', minute: '2-digit' });
+          } } },
           y: { beginAtZero: true, max: weightUnit === 'kg' ? 10 : 10000, title: { display: true, text: `Gas remaining (${weightUnit})` }, grid: { color: '#edf0f1' }, ticks: { color: '#8a949c', maxTicksLimit: 5, callback: (value) => formatWeightNumber(value) } },
         },
       },
     });
   } else {
-    weightChart.data.labels = labels;
     weightChart.data.datasets[0].data = values;
     weightChart.data.datasets[0].label = `Gas remaining (${weightUnit})`;
     weightChart.options.scales.y.title.text = `Gas remaining (${weightUnit})`;

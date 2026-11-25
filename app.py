@@ -455,7 +455,6 @@ def dashboard_data(period: str = Query(default="hourly"),
         weight_period = "hourly"
     windows = {"hourly": "1 hour", "daily": "24 hours", "weekly": "7 days"}
     bucket_widths = {"hourly": "1 minute", "daily": "5 minutes", "weekly": "1 hour"}
-    weight_bucket_widths = {"hourly": "15 seconds", "daily": "5 minutes", "weekly": "1 hour"}
     try:
         with psycopg.connect(require_database(), connect_timeout=10,
                              row_factory=dict_row) as connection:
@@ -496,13 +495,11 @@ def dashboard_data(period: str = Query(default="hourly"),
                 """)
                 load_cell = cursor.fetchone()
                 cursor.execute("""
-                    SELECT date_bin(%s::interval, recorded_at,
-                                    TIMESTAMPTZ '2000-01-01 00:00:00+00') AS bucket,
-                           AVG(weight_grams)::double precision AS weight_grams
+                    SELECT weight_grams, recorded_at
                     FROM loadcell_reading
                     WHERE recorded_at >= NOW() - %s::interval
-                    GROUP BY bucket ORDER BY bucket
-                """, (weight_bucket_widths[weight_period], windows[weight_period]))
+                    ORDER BY recorded_at
+                """, (windows[weight_period],))
                 weight_points = cursor.fetchall()
                 cursor.execute("SELECT empty_weight_grams FROM cylinder_settings WHERE id = 1")
                 settings = cursor.fetchone()
@@ -586,7 +583,7 @@ def dashboard_data(period: str = Query(default="hourly"),
             "low_threshold_grams": CYLINDER_LOW_GRAMS,
             "low_weight": remaining_grams is not None and remaining_grams < CYLINDER_LOW_GRAMS,
             "points": [
-                {"time": _iso(row["bucket"]),
+                {"time": _iso(row["recorded_at"]),
                  "weight_grams": round(max(0.0, float(row["weight_grams"]) - empty_grams), 1)}
                 for row in weight_points
             ],
