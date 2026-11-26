@@ -37,6 +37,13 @@ function formatWeightNumber(value) {
 
 function displayWeight(grams) { return `${formatWeightNumber(toDisplayWeight(grams))} ${weightUnit}`; }
 
+function weightChartMax(points) {
+  const largest = points.reduce((max, point) => Math.max(max, point.y), 0);
+  const tickStep = weightUnit === 'kg' ? 0.1 : 100;
+  if (largest === 0) return tickStep;
+  return Math.ceil((largest * 1.15) / tickStep) * tickStep;
+}
+
 function setConnection(kind, text) {
   const dot = $('connectionDot');
   if (dot) dot.className = `connection-dot ${kind}`;
@@ -128,7 +135,7 @@ function renderWeightChart(points, period) {
               ? date.toLocaleString([], { timeZone: 'Asia/Karachi', month: 'short', day: 'numeric' })
               : date.toLocaleTimeString([], { timeZone: 'Asia/Karachi', hour: 'numeric', minute: '2-digit' });
           } } },
-          y: { beginAtZero: true, max: weightUnit === 'kg' ? 10 : 10000, title: { display: true, text: `Gas remaining (${weightUnit})` }, grid: { color: '#edf0f1' }, ticks: { color: '#8a949c', maxTicksLimit: 5, callback: (value) => formatWeightNumber(value) } },
+          y: { beginAtZero: true, max: weightChartMax(values), title: { display: true, text: `Gas remaining (${weightUnit})` }, grid: { color: '#edf0f1' }, ticks: { color: '#8a949c', maxTicksLimit: 5, callback: (value) => formatWeightNumber(value) } },
         },
       },
     });
@@ -136,7 +143,7 @@ function renderWeightChart(points, period) {
     weightChart.data.datasets[0].data = values;
     weightChart.data.datasets[0].label = `Gas remaining (${weightUnit})`;
     weightChart.options.scales.y.title.text = `Gas remaining (${weightUnit})`;
-    weightChart.options.scales.y.max = weightUnit === 'kg' ? 10 : 10000;
+    weightChart.options.scales.y.max = weightChartMax(values);
     weightChart.update();
   }
 }
