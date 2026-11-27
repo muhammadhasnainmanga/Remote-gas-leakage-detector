@@ -269,8 +269,24 @@
           </section>
           <section class="animation-status panel" aria-live="polite">
             <span class="animation-status-dot" aria-hidden="true"></span>
-            <span>Current animation: <strong id="currentAnimationName">Loading…</strong></span>
+            <span>Current display: <strong id="currentAnimationName">Loading…</strong></span>
             <span id="animationMessage" class="animation-message"></span>
+          </section>
+          <section class="panel oled-text-panel">
+            <p class="eyebrow">CUSTOM MESSAGE</p>
+            <h2>Display text on the OLED</h2>
+            <p class="small-note">Up to 16 characters on each of 3 lines. Press Enter or click Display text.</p>
+            <form id="oledTextForm" class="oled-text-form">
+              <label for="oledTextLine1">Line 1</label>
+              <input id="oledTextLine1" name="line1" type="text" maxlength="16" placeholder="Hello!" autocomplete="off" />
+              <label for="oledTextLine2">Line 2</label>
+              <input id="oledTextLine2" name="line2" type="text" maxlength="16" placeholder="Message line 2" autocomplete="off" />
+              <label for="oledTextLine3">Line 3</label>
+              <div class="oled-text-submit-row">
+                <input id="oledTextLine3" name="line3" type="text" maxlength="16" placeholder="Message line 3" autocomplete="off" />
+                <button id="sendOledText" class="refresh-button" type="submit">Display text</button>
+              </div>
+            </form>
           </section>
           <section class="animation-grid" aria-label="Available OLED animations">
             <article class="panel animation-card" data-animation-card="smile">

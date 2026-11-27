@@ -453,6 +453,29 @@ h2 {
   background: var(--green);
 }
 .animation-message { margin-left: auto; color: var(--muted); }
+.oled-text-panel { margin-bottom: 14px; }
+.oled-text-panel h2 { margin: 0 0 6px; font: 700 16px Manrope, sans-serif; }
+.oled-text-panel .small-note { margin: 0 0 14px; }
+.oled-text-form {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 58px minmax(0, 1fr) 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.oled-text-form label { color: #68747e; font-size: 11px; font-weight: 600; }
+.oled-text-form input {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid #cbd3d9;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--ink);
+  font: 12px "DM Sans", sans-serif;
+}
+.oled-text-submit-row { display: contents; }
+.oled-text-submit-row .refresh-button { margin: 0; white-space: nowrap; }
+.oled-text-form input:focus-visible { outline: 2px solid #63816d; outline-offset: 1px; }
 .animation-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -721,6 +744,9 @@ h2 {
     grid-template-columns: 1fr;
   }
   .animation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .oled-text-form { grid-template-columns: 58px minmax(0, 1fr); }
+  .oled-text-submit-row { display: flex; grid-column: 2; gap: 8px; }
+  .oled-text-submit-row input { flex: 1; }
   .weight-content-grid {
     grid-template-columns: 1fr;
   }

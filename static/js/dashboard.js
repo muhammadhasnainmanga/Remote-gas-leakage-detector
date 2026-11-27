@@ -43,9 +43,12 @@ function formatDate(value) { if (!value) return '—'; const date = new Date(val
 function setText(id, value) { const element = $(id); if (element) element.textContent = value; }
 
 function renderAnimationState(state) {
-  setText('currentAnimationName', state.current_animation || animationLabels[state.keyword] || 'Unknown');
+  const isText = state.display_mode === 'text';
+  setText('currentAnimationName', isText
+    ? 'Custom text'
+    : state.current_animation || animationLabels[state.keyword] || 'Unknown');
   document.querySelectorAll('.animation-card').forEach((card) => {
-    const selected = card.dataset.animationCard === state.keyword;
+    const selected = !isText && card.dataset.animationCard === state.keyword;
     card.classList.toggle('selected', selected);
     const button = card.querySelector('.animation-select-button');
     button.textContent = selected ? 'Selected' : 'Show on OLED';
@@ -78,7 +81,7 @@ async function selectAnimation(button) {
     const result = await response.json();
     if (!response.ok) throw new Error(result.detail || `API returned ${response.status}`);
     renderAnimationState(result);
-    message.textContent = 'Saved. The Pico will switch on its next check.';
+    message.textContent = 'Animation saved. The Pico will switch on its next check.';
   } catch (error) {
     message.textContent = `Could not save: ${error.message}`;
   } finally {
@@ -311,6 +314,32 @@ function showView(view) {
 
 document.querySelectorAll('.nav-button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
 document.querySelectorAll('.animation-select-button').forEach((button) => button.addEventListener('click', () => selectAnimation(button)));
+$('oledTextForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = $('sendOledText');
+  const message = $('animationMessage');
+  button.disabled = true;
+  message.textContent = 'Sending text…';
+  try {
+    const response = await fetch('/api/display-text', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        line1: $('oledTextLine1').value,
+        line2: $('oledTextLine2').value,
+        line3: $('oledTextLine3').value,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.detail || `API returned ${response.status}`);
+    renderAnimationState(result);
+    message.textContent = 'Text saved. The Pico will show it on its next check.';
+  } catch (error) {
+    message.textContent = `Could not send text: ${error.message}`;
+  } finally {
+    button.disabled = false;
+  }
+});
 
 document.querySelectorAll('.range-button:not(.weight-range-button)').forEach((button) => button.addEventListener('click', () => {
   currentPeriod = button.dataset.period;

@@ -53,6 +53,12 @@ class AnimationSelection(BaseModel):
     keyword: str = Field(min_length=1, max_length=40)
 
 
+class OledText(BaseModel):
+    line1: str = Field(default="", max_length=16)
+    line2: str = Field(default="", max_length=16)
+    line3: str = Field(default="", max_length=16)
+
+
 ANIMATIONS = {
     "smile": "Smile",
     "blink": "Blinking face",
@@ -306,7 +312,8 @@ def get_animation(authorization: str | None = Header(default=None)):
                              row_factory=dict_row) as connection:
             with connection.cursor() as cursor:
                 cursor.execute("""
-                    SELECT current_animation, keyword
+                    SELECT current_animation, keyword, display_mode,
+                           text_line1, text_line2, text_line3
                     FROM oled_animation_state
                     WHERE id = 1
                 """)
@@ -320,7 +327,9 @@ def get_animation(authorization: str | None = Header(default=None)):
     if state is None:
         raise HTTPException(status_code=404, detail="Animation state row not found")
     return {"current_animation": state["current_animation"],
-            "keyword": state["keyword"]}
+            "keyword": state["keyword"],
+            "display_mode": state["display_mode"],
+            "text_lines": [state["text_line1"], state["text_line2"], state["text_line3"]]}
 
 
 @app.put("/api/animation")
@@ -333,7 +342,8 @@ def update_animation(selection: AnimationSelection):
             with connection.cursor() as cursor:
                 cursor.execute("""
                     UPDATE oled_animation_state
-                    SET current_animation = %s, keyword = %s, updated_at = NOW()
+                    SET current_animation = %s, keyword = %s,
+                        display_mode = 'animation', updated_at = NOW()
                     WHERE id = 1
                     RETURNING current_animation, keyword, updated_at
                 """, (ANIMATIONS[selection.keyword], selection.keyword))
@@ -348,6 +358,38 @@ def update_animation(selection: AnimationSelection):
         raise HTTPException(status_code=404, detail="Animation state row not found")
     return {"current_animation": state["current_animation"],
             "keyword": state["keyword"],
+            "display_mode": "animation",
+            "text_lines": ["", "", ""],
+            "updated_at": state["updated_at"].isoformat()}
+
+
+@app.put("/api/display-text")
+def update_display_text(text: OledText):
+    lines = [text.line1, text.line2, text.line3]
+    if not any(line.strip() for line in lines):
+        raise HTTPException(status_code=422, detail="Enter at least one line of text")
+    try:
+        with psycopg.connect(require_database(), connect_timeout=10,
+                             row_factory=dict_row) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE oled_animation_state
+                    SET display_mode = 'text', text_line1 = %s,
+                        text_line2 = %s, text_line3 = %s, updated_at = NOW()
+                    WHERE id = 1
+                    RETURNING display_mode, text_line1, text_line2, text_line3, updated_at
+                """, tuple(line.strip() for line in lines))
+                state = cursor.fetchone()
+    except HTTPException:
+        raise
+    except psycopg.Error as exc:
+        print(f"OLED text update failed: {type(exc).__name__}")
+        raise HTTPException(status_code=503, detail="OLED text unavailable") from exc
+
+    if state is None:
+        raise HTTPException(status_code=404, detail="Animation state row not found")
+    return {"display_mode": state["display_mode"],
+            "text_lines": [state["text_line1"], state["text_line2"], state["text_line3"]],
             "updated_at": state["updated_at"].isoformat()}
 
 
