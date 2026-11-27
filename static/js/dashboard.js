@@ -10,8 +10,15 @@ const animationLabels = {
   blink: 'Blinking face',
   heart: 'Heart',
   wave: 'Waving face',
-  star: 'Star eyes',
   surprised: 'Surprised face',
+  wink: 'Winking face',
+  sleepy: 'Sleepy face',
+  angry: 'Angry face',
+  sad: 'Sad face',
+  laugh: 'Laughing face',
+  cool: 'Cool face',
+  confused: 'Confused face',
+  cry: 'Crying face',
 };
 
 const rangeDescriptions = {

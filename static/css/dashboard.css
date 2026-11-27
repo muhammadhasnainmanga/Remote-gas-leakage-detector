@@ -492,8 +492,6 @@ h2 {
 }
 .animation-preview .eye { fill: #496b8b; stroke: none; }
 .preview-heart svg { fill: rgba(231, 123, 67, .16); stroke: #c87550; }
-.preview-star svg { stroke: #b38b48; }
-.preview-star svg path:first-of-type { fill: rgba(179, 139, 72, .17); }
 .animation-card h2 {
   margin: 14px 0 4px;
   font: 700 15px Manrope, sans-serif;
