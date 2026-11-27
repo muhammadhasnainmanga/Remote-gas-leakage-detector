@@ -49,6 +49,20 @@ class CylinderSettings(BaseModel):
     empty_weight_grams: float = Field(ge=0, le=100000)
 
 
+class AnimationSelection(BaseModel):
+    keyword: str = Field(min_length=1, max_length=40)
+
+
+ANIMATIONS = {
+    "smile": "Smile",
+    "blink": "Blinking face",
+    "heart": "Heart",
+    "wave": "Waving face",
+    "star": "Star eyes",
+    "surprised": "Surprised face",
+}
+
+
 def require_database() -> str:
     if not DATABASE_URL:
         raise HTTPException(status_code=503, detail="Database is not configured")
@@ -272,6 +286,62 @@ def dashboard_page():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/api/animation")
+def get_animation(authorization: str | None = Header(default=None)):
+    # The dashboard reads this public display state; the Pico may also provide
+    # its bearer token when polling it.
+    if authorization is not None:
+        require_device_token(authorization)
+    try:
+        with psycopg.connect(require_database(), connect_timeout=10,
+                             row_factory=dict_row) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT current_animation, keyword
+                    FROM oled_animation_state
+                    WHERE id = 1
+                """)
+                state = cursor.fetchone()
+    except HTTPException:
+        raise
+    except psycopg.Error as exc:
+        print(f"Animation state query failed: {type(exc).__name__}")
+        raise HTTPException(status_code=503, detail="Animation state unavailable") from exc
+
+    if state is None:
+        raise HTTPException(status_code=404, detail="Animation state row not found")
+    return {"current_animation": state["current_animation"],
+            "keyword": state["keyword"]}
+
+
+@app.put("/api/animation")
+def update_animation(selection: AnimationSelection):
+    if selection.keyword not in ANIMATIONS:
+        raise HTTPException(status_code=422, detail="Unknown animation keyword")
+    try:
+        with psycopg.connect(require_database(), connect_timeout=10,
+                             row_factory=dict_row) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE oled_animation_state
+                    SET current_animation = %s, keyword = %s, updated_at = NOW()
+                    WHERE id = 1
+                    RETURNING current_animation, keyword, updated_at
+                """, (ANIMATIONS[selection.keyword], selection.keyword))
+                state = cursor.fetchone()
+    except HTTPException:
+        raise
+    except psycopg.Error as exc:
+        print(f"Animation state update failed: {type(exc).__name__}")
+        raise HTTPException(status_code=503, detail="Animation state unavailable") from exc
+
+    if state is None:
+        raise HTTPException(status_code=404, detail="Animation state row not found")
+    return {"current_animation": state["current_animation"],
+            "keyword": state["keyword"],
+            "updated_at": state["updated_at"].isoformat()}
 
 
 @app.post("/api/readings", status_code=201)

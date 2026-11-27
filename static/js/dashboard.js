@@ -5,6 +5,14 @@ let currentPeriod = 'hourly';
 let currentWeightPeriod = 'hourly';
 let weightUnit = 'kg';
 let lastDashboardData = null;
+const animationLabels = {
+  smile: 'Smile',
+  blink: 'Blinking face',
+  heart: 'Heart',
+  wave: 'Waving face',
+  star: 'Star eyes',
+  surprised: 'Surprised face',
+};
 
 const rangeDescriptions = {
   hourly: 'Last hour · 1-minute averages',
@@ -26,6 +34,50 @@ function formatNumber(value) { return value === null || value === undefined ? '�
 function formatDate(value) { if (!value) return '—'; const date = new Date(value); return Number.isNaN(date.getTime()) ? '—' : dateFormat.format(date); }
 
 function setText(id, value) { const element = $(id); if (element) element.textContent = value; }
+
+function renderAnimationState(state) {
+  setText('currentAnimationName', state.current_animation || animationLabels[state.keyword] || 'Unknown');
+  document.querySelectorAll('.animation-card').forEach((card) => {
+    const selected = card.dataset.animationCard === state.keyword;
+    card.classList.toggle('selected', selected);
+    const button = card.querySelector('.animation-select-button');
+    button.textContent = selected ? 'Selected' : 'Show on OLED';
+    button.setAttribute('aria-pressed', String(selected));
+  });
+}
+
+async function fetchAnimationState() {
+  try {
+    const response = await fetch('/api/animation', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`API returned ${response.status}`);
+    renderAnimationState(await response.json());
+  } catch (error) {
+    setText('currentAnimationName', 'Unavailable');
+    setText('animationMessage', `Could not load: ${error.message}`);
+  }
+}
+
+async function selectAnimation(button) {
+  const keyword = button.dataset.keyword;
+  const message = $('animationMessage');
+  document.querySelectorAll('.animation-select-button').forEach((item) => { item.disabled = true; });
+  message.textContent = 'Saving…';
+  try {
+    const response = await fetch('/api/animation', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keyword }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.detail || `API returned ${response.status}`);
+    renderAnimationState(result);
+    message.textContent = 'Saved. The Pico will switch on its next check.';
+  } catch (error) {
+    message.textContent = `Could not save: ${error.message}`;
+  } finally {
+    document.querySelectorAll('.animation-select-button').forEach((item) => { item.disabled = false; });
+  }
+}
 
 function toDisplayWeight(grams) { return weightUnit === 'kg' ? grams / 1000 : grams; }
 
@@ -237,6 +289,8 @@ async function fetchRecentData() {
 function showView(view) {
   $('leakagePage').hidden = view !== 'leakage';
   $('weightPage').hidden = view !== 'weight';
+  $('animationsPage').hidden = view !== 'animations';
+  if (view === 'animations') fetchAnimationState();
   document.querySelectorAll('.nav-button').forEach((button) => {
     const active = button.dataset.view === view;
     button.classList.toggle('active', active);
@@ -249,6 +303,7 @@ function showView(view) {
 
 
 document.querySelectorAll('.nav-button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
+document.querySelectorAll('.animation-select-button').forEach((button) => button.addEventListener('click', () => selectAnimation(button)));
 
 document.querySelectorAll('.range-button:not(.weight-range-button)').forEach((button) => button.addEventListener('click', () => {
   currentPeriod = button.dataset.period;
@@ -304,4 +359,8 @@ document.querySelectorAll('.unit-button').forEach((button) => button.addEventLis
 
 $('refreshButton').addEventListener('click', fetchRecentData);
 fetchRecentData();
+fetchAnimationState();
 setInterval(fetchRecentData, 15000);
+setInterval(() => {
+  if (!$('animationsPage').hidden) fetchAnimationState();
+}, 5000);

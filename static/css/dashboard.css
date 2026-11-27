@@ -435,6 +435,82 @@ h2 {
   min-height: 0;
   padding: 20px 22px;
 }
+.animation-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 14px 18px;
+  color: #596671;
+  font-size: 12px;
+}
+.animation-status strong { color: var(--ink); }
+.animation-status-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.animation-message { margin-left: auto; color: var(--muted); }
+.animation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.animation-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.animation-card.selected {
+  border-color: #7d9a89;
+  box-shadow: 0 0 0 2px rgba(62, 128, 104, .12);
+}
+.animation-preview {
+  display: grid;
+  width: 100%;
+  height: 142px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #edf0f1;
+  border-radius: 7px;
+  background: #f7f8f8;
+}
+.animation-preview svg {
+  width: 150px;
+  max-width: 88%;
+  height: 100px;
+  fill: none;
+  stroke: #496b8b;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.animation-preview .eye { fill: #496b8b; stroke: none; }
+.preview-heart svg { fill: rgba(231, 123, 67, .16); stroke: #c87550; }
+.preview-star svg { stroke: #b38b48; }
+.preview-star svg path:first-of-type { fill: rgba(179, 139, 72, .17); }
+.animation-card h2 {
+  margin: 14px 0 4px;
+  font: 700 15px Manrope, sans-serif;
+}
+.animation-card p {
+  min-height: 34px;
+  margin: 0 0 15px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.animation-select-button { margin: auto 0 0; }
+.animation-card.selected .animation-select-button {
+  border-color: #a8c2b3;
+  background: #edf4ef;
+  color: #315f4c;
+}
 .weight-content-grid {
   margin-top: 14px;
   grid-template-columns: minmax(0, 1.8fr) minmax(250px, 0.8fr);
@@ -646,6 +722,7 @@ h2 {
   .content-grid {
     grid-template-columns: 1fr;
   }
+  .animation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .weight-content-grid {
     grid-template-columns: 1fr;
   }
@@ -668,6 +745,9 @@ h2 {
     order: 3;
     width: 100%;
   }
+  .animation-grid { grid-template-columns: 1fr; }
+  .animation-status { align-items: flex-start; flex-wrap: wrap; }
+  .animation-message { width: 100%; margin-left: 18px; }
   .header-actions {
     gap: 6px;
     font-size: 9px;

@@ -34,4 +34,5 @@ The Pico timer is used only to set a flag every 15 seconds. Sampling the HX711 a
 - `POST /api/load-cell`: load-cell readings every 15 seconds, in grams, with the same deduplication/timestamp fields.
 - `GET /api/dashboard?period=hourly|daily|weekly&weight_period=hourly|daily|weekly`
 - `GET/PUT /api/cylinder-settings`: read/update empty-cylinder tare in grams.
+- `GET/PUT /api/animation`: read the selected OLED animation and set it by keyword. The Neon `oled_animation_state` table must exist with its `id = 1` row.
 - `GET /health`: API health.
