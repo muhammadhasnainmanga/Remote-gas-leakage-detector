@@ -11,9 +11,9 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/css/dashboard.css?v=20261127-animations" />
+    <link rel="stylesheet" href="/static/css/dashboard.css?v=20261128-oled-text" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <script defer src="/static/js/dashboard.js?v=20261127-animations"></script>
+    <script defer src="/static/js/dashboard.js?v=20261128-oled-text"></script>
   </head>
   <body>
     <div class="app-shell">
@@ -275,15 +275,15 @@
           <section class="panel oled-text-panel">
             <p class="eyebrow">CUSTOM MESSAGE</p>
             <h2>Display text on the OLED</h2>
-            <p class="small-note">Up to 16 characters on each of 3 lines. Press Enter or click Display text.</p>
+            <p class="small-note">Write up to 16 characters per line. Press Enter or click Display text.</p>
             <form id="oledTextForm" class="oled-text-form">
-              <label for="oledTextLine1">Line 1</label>
-              <input id="oledTextLine1" name="line1" type="text" maxlength="16" placeholder="Hello!" autocomplete="off" />
-              <label for="oledTextLine2">Line 2</label>
-              <input id="oledTextLine2" name="line2" type="text" maxlength="16" placeholder="Message line 2" autocomplete="off" />
-              <label for="oledTextLine3">Line 3</label>
-              <div class="oled-text-submit-row">
-                <input id="oledTextLine3" name="line3" type="text" maxlength="16" placeholder="Message line 3" autocomplete="off" />
+              <div class="oled-text-fields">
+                <label class="oled-text-field" for="oledTextLine1"><span>Line 1 <small id="oledTextCount1">0/16</small></span><input id="oledTextLine1" name="line1" type="text" maxlength="16" placeholder="Hello!" autocomplete="off" /></label>
+                <label class="oled-text-field" for="oledTextLine2"><span>Line 2 <small id="oledTextCount2">0/16</small></span><input id="oledTextLine2" name="line2" type="text" maxlength="16" placeholder="Message line 2" autocomplete="off" /></label>
+                <label class="oled-text-field" for="oledTextLine3"><span>Line 3 <small id="oledTextCount3">0/16</small></span><input id="oledTextLine3" name="line3" type="text" maxlength="16" placeholder="Message line 3" autocomplete="off" /></label>
+              </div>
+              <div class="oled-text-actions">
+                <span>Each line appears separately on the OLED.</span>
                 <button id="sendOledText" class="refresh-button" type="submit">Display text</button>
               </div>
             </form>

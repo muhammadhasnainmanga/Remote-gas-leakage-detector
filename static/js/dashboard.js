@@ -340,6 +340,15 @@ $('oledTextForm').addEventListener('submit', async (event) => {
     button.disabled = false;
   }
 });
+[
+  ['oledTextLine1', 'oledTextCount1'],
+  ['oledTextLine2', 'oledTextCount2'],
+  ['oledTextLine3', 'oledTextCount3'],
+].forEach(([inputId, countId]) => {
+  $(inputId).addEventListener('input', () => {
+    setText(countId, `${$(inputId).value.length}/16`);
+  });
+});
 
 document.querySelectorAll('.range-button:not(.weight-range-button)').forEach((button) => button.addEventListener('click', () => {
   currentPeriod = button.dataset.period;
