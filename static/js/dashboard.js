@@ -6,19 +6,16 @@ let currentWeightPeriod = 'hourly';
 let weightUnit = 'kg';
 let lastDashboardData = null;
 const animationLabels = {
-  smile: 'Smile',
-  blink: 'Blinking face',
   heart: 'Heart',
-  wave: 'Waving face',
-  surprised: 'Surprised face',
-  wink: 'Winking face',
-  sleepy: 'Sleepy face',
-  angry: 'Angry face',
-  sad: 'Sad face',
-  laugh: 'Laughing face',
-  cool: 'Cool face',
-  confused: 'Confused face',
-  cry: 'Crying face',
+  eyes_blink: 'Blinking eyes',
+  eyes_wink: 'Winking eyes',
+  eyes_look: 'Looking eyes',
+  inverse_eyes: 'Inverted eyes',
+  inverse_heart: 'Inverted heart',
+  inverse_wave: 'Inverted sine wave',
+  sine_wave: 'Sine wave',
+  clock: 'Current time',
+  random_clock: 'Moving random clock',
 };
 
 const rangeDescriptions = {

@@ -28,6 +28,8 @@ Copy `main.py` and `newMQ2.py` to the Pico W. Wi-Fi settings are directly in `ma
 
 The Pico timer is used only to set a flag every 15 seconds. Sampling the HX711 and making HTTP requests happen in the regular main loop, never in the interrupt callback.
 
+The OLED selector supports a heart, eye-only animations, inverted eyes/heart/sine wave, a sine wave, Pakistan local time, and a moving random clock. The repository copy of the Pico program is in [`firmware/blink.py`](firmware/blink.py); it uses the API settings and OLED driver already on the Pico.
+
 ## API endpoints
 
 - `POST /api/readings`: continuous MQ-2 readings. Payload includes `value`, `device_id`, `boot_id`, `sequence`, and optional `device_time`.

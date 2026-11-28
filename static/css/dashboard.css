@@ -532,6 +532,15 @@ h2 {
 }
 .animation-preview .eye { fill: #496b8b; stroke: none; }
 .preview-heart svg { fill: rgba(231, 123, 67, .16); stroke: #c87550; }
+.preview-eyes svg { stroke: #496b8b; }
+.preview-inverse { background: #fff; }
+.preview-inverse svg { stroke: #344c5e; }
+.preview-inverse svg circle,
+.preview-inverse svg path,
+.preview-inverse svg ellipse { fill: none; }
+.preview-inverse .eye { fill: #fff; }
+.preview-wave-line svg { stroke: #648b78; }
+.preview-clock svg { stroke: #648b78; }
 .animation-card h2 {
   margin: 14px 0 4px;
   font: 700 15px Manrope, sans-serif;

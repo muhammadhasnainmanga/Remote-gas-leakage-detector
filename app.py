@@ -60,19 +60,16 @@ class OledText(BaseModel):
 
 
 ANIMATIONS = {
-    "smile": "Smile",
-    "blink": "Blinking face",
     "heart": "Heart",
-    "wave": "Waving face",
-    "surprised": "Surprised face",
-    "wink": "Winking face",
-    "sleepy": "Sleepy face",
-    "angry": "Angry face",
-    "sad": "Sad face",
-    "laugh": "Laughing face",
-    "cool": "Cool face",
-    "confused": "Confused face",
-    "cry": "Crying face",
+    "eyes_blink": "Blinking eyes",
+    "eyes_wink": "Winking eyes",
+    "eyes_look": "Looking eyes",
+    "inverse_eyes": "Inverted eyes",
+    "inverse_heart": "Inverted heart",
+    "inverse_wave": "Inverted sine wave",
+    "sine_wave": "Sine wave",
+    "clock": "Current time",
+    "random_clock": "Moving random clock",
 }
 
 
@@ -326,8 +323,13 @@ def get_animation(authorization: str | None = Header(default=None)):
 
     if state is None:
         raise HTTPException(status_code=404, detail="Animation state row not found")
-    return {"current_animation": state["current_animation"],
-            "keyword": state["keyword"],
+    keyword = state["keyword"]
+    current_animation = state["current_animation"]
+    if state["display_mode"] == "animation" and keyword not in ANIMATIONS:
+        keyword = "heart"
+        current_animation = ANIMATIONS[keyword]
+    return {"keyword": keyword,
+            "current_animation": current_animation,
             "display_mode": state["display_mode"],
             "text_lines": [state["text_line1"], state["text_line2"], state["text_line3"]]}
 
